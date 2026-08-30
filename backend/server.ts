@@ -1,23 +1,27 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../convex/_generated/api.js';
 
-const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL || 'https://dutiful-dotterel-920.convex.cloud';
-export const convex = new ConvexHttpClient(CONVEX_URL);
-console.log(`[CONVEX CLOUD] Linked to ${CONVEX_URL}`);
+const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL || process.env.CONVEX_URL || 'https://dutiful-dotterel-920.convex.cloud';
+let convexClient: ConvexHttpClient | null = null;
+try {
+  convexClient = new ConvexHttpClient(CONVEX_URL);
+  console.log(`[CONVEX CLOUD] Linked to ${CONVEX_URL}`);
+} catch (e: any) {
+  console.warn(`[CONVEX CLOUD] Warning:`, e.message);
+}
+export const convex = convexClient!;
 
 const app = express();
 app.use(express.json());
 
-// Serve Static Assets (CSS, JS, media)
-app.use(express.static(path.resolve(process.cwd(), 'web')));
+// Serve Static Assets locally (Vercel CDN handles web/ in production)
+if (!process.env.VERCEL) {
+  app.use(express.static(path.resolve(process.cwd(), 'web')));
+}
 
 // Enable CORS
 app.use((req, res, next) => {
