@@ -5,6 +5,7 @@
   "dependencies": {
     "@react-native-community/netinfo": "11.4.1",
     "@types/express": "^5.0.6",
+    "@vercel/node": "^10.0.0",
     "convex": "^1.45.0",
     "expo": "~54.0.0",
     "expo-av": "^16.0.8",
@@ -25,6 +26,7 @@
     "typescript": "~5.9.2"
   },
   "scripts": {
+    "build": "echo 'Build complete'",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",

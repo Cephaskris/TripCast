@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/admin", "destination": "/web/admin.html" },
+    { "source": "/advertiser", "destination": "/web/advertiser.html" },
+    { "source": "/driver", "destination": "/web/driver.html" },
+    { "source": "/support", "destination": "/web/support.html" },
+    { "source": "/", "destination": "/web/index.html" },
+    { "source": "/(.*)", "destination": "/web/$1" }
+  ]
+}

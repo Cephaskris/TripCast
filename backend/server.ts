@@ -1314,7 +1314,11 @@ app.get('/api/admin/users/:id', (req: Request, res: Response) => {
 });
 
 // Start Server
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`TripCast Backend API & Cloud Engine running on port ${PORT}`);
-});
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 8080;
+  app.listen(PORT, () => {
+    console.log(`TripCast Backend API & Cloud Engine running on port ${PORT}`);
+  });
+}
+
+export default app;
