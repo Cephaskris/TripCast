@@ -1,12 +1,68 @@
 {
-  "version": 2,
+  "outputDirectory": "web",
+  "cleanUrls": true,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/admin", "destination": "/web/admin.html" },
-    { "source": "/advertiser", "destination": "/web/advertiser.html" },
-    { "source": "/driver", "destination": "/web/driver.html" },
-    { "source": "/support", "destination": "/web/support.html" },
-    { "source": "/", "destination": "/web/index.html" },
-    { "source": "/(.*)", "destination": "/web/$1" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/advertiser", "destination": "/advertiser.html" },
+    { "source": "/driver", "destination": "/driver.html" },
+    { "source": "/support", "destination": "/support.html" },
+    { "source": "/", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*).html",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=UTF-8"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=UTF-8"
+        }
+      ]
+    },
+    {
+      "source": "/admin",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=UTF-8"
+        }
+      ]
+    },
+    {
+      "source": "/advertiser",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=UTF-8"
+        }
+      ]
+    },
+    {
+      "source": "/driver",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=UTF-8"
+        }
+      ]
+    },
+    {
+      "source": "/support",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html; charset=UTF-8"
+        }
+      ]
+    }
   ]
 }
