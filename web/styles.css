@@ -1106,6 +1106,12 @@ body {
   box-shadow: var(--shadow-card);
   transition: all 0.2s ease;
   position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.gateway-card * {
+  pointer-events: none;
 }
 
 .gateway-card:hover {
