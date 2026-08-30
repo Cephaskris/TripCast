@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripCast | Portal Gateway</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="canvas-wrapper">
+    <div class="app-container gateway-container">
+      
+      <!-- Brand Header -->
+      <header class="app-header" style="justify-content: center; margin-bottom: 40px;">
+        <div class="brand-pill large">
+          <span class="brand-dot"></span>
+          <span class="brand-name" style="font-size: 20px;">TripCast</span>
+          <span style="font-size: 11px; color: var(--accent-gray-text); font-weight: 600; margin-left: 6px;">Ad Network Gateway</span>
+        </div>
+      </header>
+
+      <!-- Center Greeting -->
+      <div class="gateway-hero">
+        <h1 class="hero-greeting" style="text-align: center; font-size: 42px; margin-bottom: 8px;">Welcome to TripCast</h1>
+        <p style="text-align: center; color: var(--accent-gray-text); font-size: 16px; margin-bottom: 48px;">
+          Select your operational role to access your dedicated standalone portal.
+        </p>
+
+        <!-- 3 Role Portal Cards Grid -->
+        <div class="gateway-grid">
+          
+          <!-- Card 1: Advertiser / Client -->
+          <a href="/advertiser" class="gateway-card">
+            <div class="gateway-card-top">
+              <span class="gateway-icon-badge">🏢</span>
+              <span class="arrow-circle-btn">↗</span>
+            </div>
+            <div class="gateway-card-body">
+              <span class="status-pill active" style="margin-bottom: 12px;">Client Portal</span>
+              <h3>Advertisers & Brands</h3>
+              <p>Deploy video ad campaigns, review real-time proof-of-play analytics, and track vehicle impressions.</p>
+            </div>
+            <div class="gateway-card-footer">
+              <span class="btn btn-dark btn-block">Enter Advertiser Portal</span>
+              <small class="gateway-hint">URL: /advertiser</small>
+            </div>
+          </a>
+
+          <!-- Card 2: Driver -->
+          <a href="/driver" class="gateway-card highlight">
+            <div class="gateway-card-top">
+              <span class="gateway-icon-badge gold">🚗</span>
+              <span class="arrow-circle-btn">↗</span>
+            </div>
+            <div class="gateway-card-body">
+              <span class="status-pill pending" style="margin-bottom: 12px;">Driver Hub</span>
+              <h3>Vehicle Drivers</h3>
+              <p>Turn on in-transit <strong>Cast Mode</strong>, stream today's video playlist, and accrue live shift earnings in Naira.</p>
+            </div>
+            <div class="gateway-card-footer">
+              <span class="btn btn-dark btn-block">Enter Driver Portal</span>
+              <small class="gateway-hint">URL: /driver</small>
+            </div>
+          </a>
+
+          <!-- Card 3: Admin -->
+          <a href="/admin" class="gateway-card">
+            <div class="gateway-card-top">
+              <span class="gateway-icon-badge dark">⚙️</span>
+              <span class="arrow-circle-btn">↗</span>
+            </div>
+            <div class="gateway-card-body">
+              <span class="status-pill paid" style="margin-bottom: 12px;">Central Operations</span>
+              <h3>Platform Admin</h3>
+              <p>Ad moderation pipeline, fleet tablet hardware telemetry, and automated weekly driver settlements.</p>
+            </div>
+            <div class="gateway-card-footer">
+              <span class="btn btn-dark btn-block">Enter Admin Console</span>
+              <small class="gateway-hint">URL: /admin</small>
+            </div>
+          </a>
+
+          <!-- Card 4: Customer Support Desk -->
+          <a href="/support" class="gateway-card">
+            <div class="gateway-card-top">
+              <span class="gateway-icon-badge" style="background: #E6F8EE; color: #16A34A;">💬</span>
+              <span class="arrow-circle-btn">↗</span>
+            </div>
+            <div class="gateway-card-body">
+              <span class="status-pill active" style="margin-bottom: 12px;">Support Desk</span>
+              <h3>Customer Care</h3>
+              <p>Triage and resolve driver payout disputes, tablet hardware issues, and advertiser billing inquiries.</p>
+            </div>
+            <div class="gateway-card-footer">
+              <span class="btn btn-dark btn-block">Enter Support Desk</span>
+              <small class="gateway-hint">URL: /support</small>
+            </div>
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

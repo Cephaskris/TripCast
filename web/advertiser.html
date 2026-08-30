@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripCast | Advertiser Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="canvas-wrapper">
+
+    <!-- 1. Dedicated Advertiser Login Screen -->
+    <div id="loginSection" class="auth-wrapper" style="display: none;">
+      <div class="auth-card">
+        <div class="brand-pill" style="margin-bottom: 24px; display: inline-flex;">
+          <span class="brand-dot"></span>
+          <span class="brand-name">TripCast</span>
+        </div>
+        <h2 class="auth-title">Advertiser Portal</h2>
+        <p class="auth-subtitle">Sign in to manage in-transit DOOH video campaigns across Nigerian fleets.</p>
+
+        <form id="advertiserLoginForm" onsubmit="handleAdvertiserLogin(event)">
+          <div class="form-group">
+            <label>Advertiser Email</label>
+            <input type="email" id="loginEmail" class="form-input" value="advertiser@brand.com" placeholder="name@company.com" required>
+          </div>
+          <div class="form-group">
+            <label>Access Key / Password</label>
+            <input type="password" id="loginPin" class="form-input" value="pass123" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-dark btn-block" style="margin-top: 10px;">Sign In to Dashboard</button>
+        </form>
+
+        <div class="auth-footer">
+          <span>Are you a driver? <a href="/driver">Driver Portal</a> • <a href="/admin">Admin Console</a></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Advertiser Main Dashboard -->
+    <div id="dashboardSection" class="app-container" style="display: none;">
+      
+      <!-- Top Navigation Bar -->
+      <header class="app-header">
+        <div class="brand-pill">
+          <span class="brand-dot"></span>
+          <span class="brand-name">TripCast</span>
+          <span class="badge-role">Advertiser</span>
+        </div>
+
+        <nav class="center-nav-pill">
+          <button class="nav-pill-btn active" id="tabOverview" onclick="switchAdvTab('overview')">Dashboard</button>
+          <button class="nav-pill-btn" id="tabCampaigns" onclick="switchAdvTab('campaigns')">My Campaigns</button>
+          <button class="nav-pill-btn" id="tabAnalytics" onclick="switchAdvTab('analytics')">Proof of Play</button>
+        </nav>
+
+        <div class="header-right-group">
+          <button class="btn btn-subtle btn-sm" onclick="openAdvSupportModal()" title="Contact Customer Support & Billing Inquiries">
+            💬 Contact Support
+          </button>
+          <button class="btn btn-dark btn-sm" onclick="openNewCampaignModal()">
+            ⚡ Create Campaign
+          </button>
+          <button class="icon-circle-btn" onclick="refreshAdvertiserData()" title="Refresh Live Analytics">
+            <span>🔄</span>
+          </button>
+          <div class="user-avatar-pill" onclick="logoutAdvertiser()" title="Click to Logout">
+            <div class="avatar-circle" id="userAvatarInitials">AD</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Hero Greeting & KPI Stats Bar -->
+      <section class="hero-section">
+        <div class="hero-left">
+          <h1 class="hero-greeting" id="advGreeting">Hello Coca Cola Ads</h1>
+          
+          <!-- Segmented Progress Bar Pill -->
+          <div class="segmented-progress-card">
+            <div class="seg-item seg-primary">
+              <span class="seg-label">Pacing</span>
+              <span class="seg-val">98% Normal</span>
+            </div>
+            <div class="seg-item seg-yellow">
+              <span class="seg-label">Active Fleets</span>
+              <span class="seg-val">Lagos Corridor</span>
+            </div>
+            <div class="seg-item seg-striped">
+              <span class="seg-label">Audited ROI</span>
+              <span class="seg-val">100% Verified</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Big Right KPI Numbers in Naira -->
+        <div class="hero-stats-row">
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="advTotalPlays">342</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">🚗</span> Verified Video Plays
+            </div>
+          </div>
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="advActiveTablets">2</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">⚡</span> Fleet Tablets
+            </div>
+          </div>
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="advBudgetSpent">₦8,550</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">💰</span> Budget Utilized
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 1. Overview Bento Grid Stage -->
+      <div id="viewOverview" style="display: block;">
+      <div class="bento-grid">
+        
+        <!-- LEFT COLUMN: Campaign Schedule & Transit Timeline -->
+        <div class="bento-col-left">
+          <div class="card card-clean timeline-card">
+            <div class="card-title-row">
+              <h3>Broadcast Schedule</h3>
+              <button class="arrow-circle-btn" onclick="openNewCampaignModal()">↗</button>
+            </div>
+
+            <!-- Mini Calendar Strip -->
+            <div class="calendar-strip">
+              <div class="cal-day"><span class="cal-name">Sun</span><span class="cal-num">23</span></div>
+              <div class="cal-day"><span class="cal-name">Mon</span><span class="cal-num">24</span></div>
+              <div class="cal-day"><span class="cal-name">Tue</span><span class="cal-num">25</span></div>
+              <div class="cal-day active"><span class="cal-name">Wed</span><span class="cal-num">26</span></div>
+              <div class="cal-day"><span class="cal-name">Thu</span><span class="cal-num">27</span></div>
+              <div class="cal-day"><span class="cal-name">Fri</span><span class="cal-num">28</span></div>
+            </div>
+
+            <!-- Vertical Timeline -->
+            <div class="timeline-track">
+              <div class="timeline-row">
+                <div class="time-node active-black">09:00</div>
+                <div class="time-content dark-banner">
+                  <div class="banner-title">Morning Commute Loop <span class="dot-gold"></span></div>
+                  <div class="banner-time">09:00am - 11:30am • Lekki - VI</div>
+                </div>
+              </div>
+
+              <div class="timeline-row">
+                <div class="time-node node-yellow">01:00</div>
+                <div class="time-content light-bubble">
+                  <div class="bubble-title">Business District Loop <span class="dot-black"></span></div>
+                  <div class="bubble-time">01:00pm - 04:00pm • Ikeja GRA</div>
+                </div>
+              </div>
+
+              <div class="timeline-row">
+                <div class="time-node node-pill">06:00</div>
+                <div class="time-content light-bubble">
+                  <div class="bubble-title">Evening Rush Hours</div>
+                  <div class="bubble-time">06:00pm - 09:30pm • Mainland</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER COLUMN: Active Campaigns & Wavy Playback Velocity Curve -->
+        <div class="bento-col-center">
+          
+          <div class="card card-clean campaigns-card">
+            <div class="card-title-row">
+              <div>
+                <h3>My Active Campaigns</h3>
+                <p class="card-subtitle">Verified in-transit video loops across registered vehicle fleets.</p>
+              </div>
+              <div class="search-pill-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Filter campaign..." class="search-input" oninput="filterAdvCampaigns(this.value)">
+                <button class="arrow-circle-btn" onclick="openNewCampaignModal()">↗</button>
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="clean-table">
+                <thead>
+                  <tr>
+                    <th>Creative / Title</th>
+                    <th>Target City</th>
+                    <th>Budget (₦)</th>
+                    <th>Verified Plays</th>
+                    <th>Rate</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="advCampaignsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Playback Velocity Curve -->
+          <div class="card card-clean chart-card">
+            <div class="card-title-row">
+              <div class="chart-header-left">
+                <h3>Playback Velocity & Impression Momentum</h3>
+                <div class="chart-legend">
+                  <span class="legend-dot gold"></span> <span class="legend-text">Urban Commutes</span>
+                  <span class="legend-dot black"></span> <span class="legend-text">Expressways</span>
+                </div>
+              </div>
+              <div class="chart-header-right">
+                <div class="year-pill">2026 ⌵</div>
+                <button class="arrow-circle-btn" onclick="refreshAdvertiserData()">↗</button>
+              </div>
+            </div>
+
+            <div class="wavy-chart-container">
+              <svg class="wavy-svg" viewBox="0 0 700 140" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="yellowAreaAdv" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#F9D058" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#F9D058" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M 0 110 Q 70 60 140 80 T 280 40 T 420 65 T 560 25 T 700 50 L 700 140 L 0 140 Z" fill="url(#yellowAreaAdv)" />
+                <path class="wave-yellow" d="M 0 110 Q 70 60 140 80 T 280 40 T 420 65 T 560 25 T 700 50" />
+                <path class="wave-dotted" d="M 0 80 Q 70 100 140 50 T 280 80 T 420 30 T 560 70 T 700 20" />
+              </svg>
+
+              <div class="chart-tooltip-pill" style="left: 50%; top: 32%;">
+                <span>Plays: 342 views</span>
+              </div>
+
+              <div class="chart-x-axis">
+                <span>08:00</span>
+                <span>10:00</span>
+                <span>12:00</span>
+                <span class="active-month">14:00 (Peak)</span>
+                <span>16:00</span>
+                <span>18:00</span>
+                <span>20:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Dark Telemetry Matrix & Donut Fulfillment -->
+        <div class="bento-col-right">
+          
+          <!-- Dark Telemetry Matrix Card -->
+          <div class="card card-dark attendance-card">
+            <div class="dark-card-header">
+              <h3>Fleet Telemetry Matrix</h3>
+              <button class="arrow-circle-btn dark-mode-btn">↗</button>
+            </div>
+
+            <div class="dark-kpi-row">
+              <div class="dark-stat">
+                <span class="dark-stat-num" id="advOnlineTablets">2</span>
+                <span class="dark-stat-icon">↗</span>
+                <span class="dark-stat-label">Active Tablets</span>
+              </div>
+              <div class="dark-stat">
+                <span class="dark-stat-num">100%</span>
+                <span class="dark-stat-icon" style="color: #10B981;">✓</span>
+                <span class="dark-stat-label">Audited</span>
+              </div>
+            </div>
+
+            <!-- Golden & Slate Dot Matrix Grid -->
+            <div class="dot-matrix-grid" id="advDotMatrixGrid"></div>
+          </div>
+
+          <!-- Donut Fulfillment Card -->
+          <div class="card card-clean composition-card">
+            <div class="card-title-row">
+              <h3>Budget Fulfillment</h3>
+              <button class="arrow-circle-btn" onclick="openNewCampaignModal()">↗</button>
+            </div>
+
+            <div class="donut-wrapper">
+              <div class="donut-chart-box">
+                <svg viewBox="0 0 100 100" class="donut-svg">
+                  <circle cx="50" cy="50" r="38" class="donut-bg" />
+                  <circle cx="50" cy="50" r="38" class="donut-yellow" stroke-dasharray="167 238" stroke-dashoffset="0" />
+                  <circle cx="50" cy="50" r="38" class="donut-black" stroke-dasharray="71 238" stroke-dashoffset="-167" />
+                </svg>
+                <div class="donut-center-text">
+                  <span class="donut-center-val" id="advDonutPlays">342</span>
+                  <span class="donut-center-sub">Total Plays</span>
+                </div>
+              </div>
+
+              <div class="composition-legend">
+                <div class="comp-item">
+                  <span class="comp-dot gold"></span>
+                  <span class="comp-text">70% Delivered</span>
+                </div>
+                <div class="comp-item">
+                  <span class="comp-dot black"></span>
+                  <span class="comp-text">30% Reserved</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      </div> <!-- End #viewOverview -->
+
+      <!-- 2. Tab View 2: My Campaigns Portfolio -->
+      <div id="viewCampaigns" class="card card-clean full-table-card" style="display: none; margin-bottom: 24px;">
+        <div class="card-title-row">
+          <div>
+            <h3>All In-Transit Campaigns</h3>
+            <p class="card-subtitle">Flight schedule, impression fulfillment, and CPM budget pacing.</p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="search-pill-container">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="Search campaign..." class="search-input" oninput="filterAdvCampaigns(this.value)">
+            </div>
+            <button class="btn btn-dark btn-sm" onclick="openNewCampaignModal()">+ New Campaign</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th>Creative</th>
+                <th>Campaign Title</th>
+                <th>Target City</th>
+                <th>Flight Dates</th>
+                <th>Budget (₦)</th>
+                <th>Impressions Delivered</th>
+                <th>Rate / Play</th>
+                <th>Status</th>
+                <th>Audit Action</th>
+              </tr>
+            </thead>
+            <tbody id="advFullCampaignsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. Tab View 3: Proof-of-Play Verification & ROI Audit -->
+      <div id="viewProofOfPlay" class="card card-clean full-table-card" style="display: none; margin-bottom: 24px;">
+        <div class="card-title-row" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3>Proof-of-Play Audit & Vehicle Verification</h3>
+            <p class="card-subtitle">Cryptographically verified playback logs mapped directly to tablet serial numbers & vehicle license plates.</p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="auditCampaignSelect" class="form-select" style="padding: 6px 12px; font-size: 13px; width: 220px;" onchange="loadProofOfPlayAudit(this.value)">
+              <option value="all">All Active Campaigns</option>
+            </select>
+            <button class="btn btn-dark btn-sm" onclick="exportProofOfPlayCSV()">
+              📥 Export Audit CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Audit Summary KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+          <div style="background: #FAF8F4; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 12px 16px;">
+            <span style="font-size: 11px; color: var(--accent-gray-text); font-weight: 600; text-transform: uppercase;">Total Audited Records</span>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-black);" id="auditTotalRecords">0</div>
+          </div>
+          <div style="background: #FAF8F4; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 12px 16px;">
+            <span style="font-size: 11px; color: var(--accent-gray-text); font-weight: 600; text-transform: uppercase;">Active Fleet Tablets</span>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-black);" id="auditActiveVehicles">2 Vehicles</div>
+          </div>
+          <div style="background: #FAF8F4; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 12px 16px;">
+            <span style="font-size: 11px; color: var(--accent-gray-text); font-weight: 600; text-transform: uppercase;">Audit Compliance</span>
+            <div style="font-size: 22px; font-weight: 800; color: #16A34A;">100% Verified ✓</div>
+          </div>
+          <div style="background: #FAF8F4; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 12px 16px;">
+            <span style="font-size: 11px; color: var(--accent-gray-text); font-weight: 600; text-transform: uppercase;">Standard Rate</span>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-black);">₦25.00 / play</div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>Timestamp (WAT)</th>
+                <th>Campaign</th>
+                <th>Vehicle Plate</th>
+                <th>Driver / Corridor</th>
+                <th>GPS Coordinates</th>
+                <th>Rate (₦)</th>
+                <th>Status</th>
+                <th>Audit Hash</th>
+              </tr>
+            </thead>
+            <tbody id="advAuditTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+  <!-- Create Campaign Modal -->
+  <div class="modal-overlay" id="newCampaignModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3>Create In-Transit Ad Campaign</h3>
+          <p class="modal-sub">Deploy video ads to vehicle tablet fleets across Nigeria.</p>
+        </div>
+        <button class="modal-close-circle" onclick="closeNewCampaignModal()">&times;</button>
+      </div>
+
+      <form id="newCampaignForm" onsubmit="handleCreateCampaign(event)">
+        <div class="form-group">
+          <label>Campaign Title</label>
+          <input type="text" id="inputTitle" class="form-input" placeholder="e.g. Lagos Metro Brand Drive" required>
+        </div>
+
+        <div class="form-group">
+          <label>Video Creative URL (.mp4 H.264)</label>
+          <input type="url" id="inputVideoUrl" class="form-input" value="https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/person-bicycle-car-detection.mp4" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Campaign Budget (₦ NGN)</label>
+            <input type="number" id="inputBudget" class="form-input" value="250000" min="10000" step="5000" oninput="updateEstimates()" required>
+          </div>
+
+          <div class="form-group">
+            <label>Target City</label>
+            <select id="inputCity" class="form-select">
+              <option value="Lagos">Lagos, Nigeria</option>
+              <option value="Abuja">Abuja, Nigeria</option>
+              <option value="Port Harcourt">Port Harcourt, Nigeria</option>
+              <option value="Ibadan">Ibadan, Nigeria</option>
+              <option value="All">All Active Fleets</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Campaign Start Date</label>
+            <input type="date" id="inputStartDate" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Campaign End Date</label>
+            <input type="date" id="inputEndDate" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="calculator-card">
+          <div class="calc-col">
+            <span class="calc-label">Est. Verified Impressions:</span>
+            <span class="calc-val-large" id="estImpressions">10,000 Plays</span>
+          </div>
+          <div class="calc-col">
+            <span class="calc-label">Fixed Rate:</span>
+            <span class="calc-val-large">₦25 / play</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-subtle" onclick="closeNewCampaignModal()">Cancel</button>
+          <button type="button" class="btn btn-dark" id="btnProceedCheckout" onclick="proceedToPaystackCheckout()">
+            💳 Proceed to Checkout (<span id="btnCheckoutAmount">₦250,000</span>)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Paystack Checkout Simulation Modal -->
+  <div class="modal-overlay" id="paystackCheckoutModal" style="display: none;">
+    <div class="modal-card" style="max-width: 440px; border-radius: 22px; padding: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px; margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: #0BA4DB; color: white; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">P</div>
+          <div>
+            <h4 style="margin: 0; font-size: 15px; color: var(--accent-black);">TripCast DOOH Network</h4>
+            <small style="color: var(--accent-gray-text);">Secured by Paystack</small>
+          </div>
+        </div>
+        <button class="modal-close-circle" onclick="closePaystackModal()">&times;</button>
+      </div>
+
+      <div style="background: #FAF8F4; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 18px;">
+        <span style="font-size: 11px; color: var(--accent-gray-text); text-transform: uppercase; font-weight: 700;">Amount to Charge (NGN)</span>
+        <div style="font-size: 30px; font-weight: 800; color: var(--accent-black);" id="checkoutAmountDisplay">₦250,000.00</div>
+        <small style="color: #6B7280; font-size: 12px;" id="checkoutCampaignSummary">Campaign Media Flight Deposit</small>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <button type="button" class="btn btn-dark btn-sm" style="flex: 1; border-radius: 10px;">💳 Card</button>
+        <button type="button" class="btn btn-subtle btn-sm" style="flex: 1; border-radius: 10px;">🏦 Bank Transfer</button>
+        <button type="button" class="btn btn-subtle btn-sm" style="flex: 1; border-radius: 10px;">📱 USSD</button>
+      </div>
+
+      <form id="paystackPaymentForm" onsubmit="executePaystackPayment(event)">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="font-size: 12px;">Card Number</label>
+          <input type="text" id="paystackCardNum" class="form-input" value="5399 4100 8821 3491" placeholder="5399 •••• •••• ••••" required>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 14px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 12px;">Card Expiry</label>
+            <input type="text" id="paystackCardExp" class="form-input" value="08/28" placeholder="MM/YY" required>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 12px;">CVV</label>
+            <input type="password" id="paystackCardCvv" class="form-input" value="732" placeholder="123" maxlength="3" required>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <span style="color: #10B981; font-size: 14px;">🔒</span>
+          <span style="font-size: 11px; color: var(--accent-gray-text);">Verified Paystack Sandbox • Instant ₦ Settlement</span>
+        </div>
+
+        <button type="submit" id="btnPaystackSubmit" class="btn btn-dark btn-block" style="padding: 13px; font-weight: 700; font-size: 14px; background: #0BA4DB; border-color: #0BA4DB;">
+          Authorize & Pay ₦<span id="btnPaystackPayAmount">250,000</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Advertiser Support Modal -->
+  <div class="modal-overlay" id="advSupportModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3>Advertiser Helpdesk & Inquiries</h3>
+          <p class="modal-sub">Direct support for campaign pacing, VAT invoicing, or proof-of-play audits.</p>
+        </div>
+        <button class="modal-close-circle" onclick="closeAdvSupportModal()">&times;</button>
+      </div>
+
+      <form id="advSupportForm" onsubmit="handleAdvSubmitTicket(event)">
+        <div class="form-group">
+          <label>Inquiry Category</label>
+          <select id="advTicketCategory" class="form-select" required>
+            <option value="CAMPAIGN_BILLING">🧾 Campaign Billing & Invoicing (₦)</option>
+            <option value="GENERAL">📊 Proof-of-Play Audit & Analytics Report</option>
+            <option value="SYNC_ERROR">🎬 Video Creative Upload Assistance</option>
+            <option value="GENERAL">💬 General Brand Partnership Inquiry</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" id="advTicketSubject" class="form-input" placeholder="e.g. August VAT invoice request & audience report" required>
+        </div>
+
+        <div class="form-group">
+          <label>Detailed Message</label>
+          <textarea id="advTicketDescription" class="form-input" rows="4" placeholder="Describe your request or campaign question..." style="resize: vertical; min-height: 90px;" required></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-subtle" onclick="closeAdvSupportModal()">Cancel</button>
+          <button type="submit" class="btn btn-dark">Send Message to Customer Care</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="advertiser.js"></script>
+</body>
+</html>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripCast | Admin Central Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="canvas-wrapper">
+
+    <!-- 1. Dedicated Admin Login Screen -->
+    <div id="loginSection" class="auth-wrapper" style="display: none;">
+      <div class="auth-card">
+        <div class="brand-pill" style="margin-bottom: 24px; display: inline-flex;">
+          <span class="brand-dot" style="background: var(--accent-black);"></span>
+          <span class="brand-name">TripCast</span>
+          <span class="badge-role" style="background: #FEE2E2; color: #DC2626;">Operations Console</span>
+        </div>
+        <h2 class="auth-title">Admin Command Login</h2>
+        <p class="auth-subtitle">Restricted operations portal for ad moderation, fleet telemetry tracking, and driver financial settlements.</p>
+
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+          <div class="form-group">
+            <label>Administrator Email</label>
+            <input type="email" id="adminEmail" class="form-input" value="admin@tripcast.io" placeholder="admin@tripcast.io" required>
+          </div>
+          <div class="form-group">
+            <label>Master Security PIN / Password</label>
+            <input type="password" id="adminPin" class="form-input" value="admin123" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-dark btn-block" style="margin-top: 10px;">Authenticate & Enter Console</button>
+        </form>
+
+        <div class="auth-footer">
+          <span>Go to <a href="/advertiser">Advertiser Portal</a> • <a href="/driver">Driver Portal</a></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Admin Main Console -->
+    <div id="dashboardSection" class="app-container" style="display: none;">
+      
+      <!-- Top Navigation Bar -->
+      <header class="app-header">
+        <div class="brand-pill">
+          <span class="brand-dot"></span>
+          <span class="brand-name">TripCast</span>
+          <span class="badge-role" style="background: #1E1E22; color: #fff;">Admin Console</span>
+        </div>
+
+        <nav class="center-nav-pill">
+          <button class="nav-pill-btn active" id="tabModeration" onclick="switchAdminTab('moderation')">
+            Moderation Queue <span class="nav-badge" id="adminPendingBadge">1</span>
+          </button>
+          <button class="nav-pill-btn" id="tabFinancials" onclick="switchAdminTab('financials')">
+            Revenue & Financials 📊
+          </button>
+          <button class="nav-pill-btn" id="tabSettlements" onclick="switchAdminTab('settlements')">Driver Settlements</button>
+          <button class="nav-pill-btn" id="tabSupport" onclick="switchAdminTab('support')">
+            💬 Customer Service <span class="nav-badge" id="adminSupportBadge">2</span>
+          </button>
+          <button class="nav-pill-btn" id="tabUsers" onclick="switchAdminTab('users')">
+            User Directory 👥
+          </button>
+        </nav>
+
+        <div class="header-right-group">
+          <button class="btn btn-dark btn-sm" onclick="calculateAdminSettlements()">
+            💰 Process Settlements
+          </button>
+          <button class="icon-circle-btn" onclick="refreshAdminData()" title="Sync System Data">
+            <span>🔄</span>
+          </button>
+          <div class="user-avatar-pill" onclick="logoutAdmin()" title="Logout Admin">
+            <div class="avatar-circle">OP</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Hero Greeting & Overview -->
+      <section class="hero-section">
+        <div class="hero-left">
+          <h1 class="hero-greeting">Hello Operations Admin</h1>
+          
+          <div class="segmented-progress-card">
+            <div class="seg-item seg-primary">
+              <span class="seg-label">Fleet Online</span>
+              <span class="seg-val" id="adminOnlineRatio">2 / 2 Tablets</span>
+            </div>
+            <div class="seg-item seg-yellow">
+              <span class="seg-label">Pending Approval</span>
+              <span class="seg-val" id="adminPendingCount">1 Ad</span>
+            </div>
+            <div class="seg-item seg-striped">
+              <span class="seg-label">Settlement Rate</span>
+              <span class="seg-val">₦10 / play</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Big Right KPI Numbers in Naira -->
+        <div class="hero-stats-row">
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="adminTotalLogs">342</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">🚗</span> Ingested Telemetry Logs
+            </div>
+          </div>
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="adminActiveVehicles">2</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">⚡</span> Connected Vehicles
+            </div>
+          </div>
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="adminSettlementTotal">₦2,400</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">💰</span> Accrued Driver Payouts
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab View 1: Ad Creative Moderation Pipeline -->
+      <section id="viewModeration" class="card card-clean full-table-card" style="display: block; margin-bottom: 24px;">
+        <div class="card-title-row">
+          <div>
+            <h3>Ad Creative Moderation Pipeline</h3>
+            <p class="card-subtitle">Review and approve brand video creatives before they are added to the daily tablet manifest.</p>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th>Video Preview</th>
+                <th>Campaign Title</th>
+                <th>Advertiser</th>
+                <th>Budget (₦)</th>
+                <th>Target Impressions</th>
+                <th>Status</th>
+                <th>Moderation Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminModerationTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab View 3: Driver Settlements & Payouts -->
+      <section id="viewSettlements" class="card card-clean full-table-card" style="display: none; margin-bottom: 24px;">
+        
+        <!-- Header Controls Row -->
+        <div class="card-title-row" style="flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 16px; margin-bottom: 20px;">
+          <div>
+            <h3>Driver Monthly Performance Settlements</h3>
+            <p class="card-subtitle" id="settlementCycleSub">Automated driver compensation per validated video loop in Nigerian Naira (₦).</p>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <!-- Admin Configurable Driver Payout Rate Widget -->
+            <div style="background: #FAF8F4; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 6px 14px; display: flex; align-items: center; gap: 10px;">
+              <div>
+                <span style="font-size: 10px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Driver Payout Rate</span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-weight: 800; color: var(--accent-black); font-size: 13px;">₦</span>
+                  <input type="number" id="inputDriverPayoutRate" class="form-input" style="width: 72px; padding: 3px 6px; font-weight: 800; font-size: 13px; border-radius: 8px; text-align: center;" step="0.50" min="1" value="10.00">
+                  <span style="font-size: 11px; color: var(--accent-gray-text);">/ play</span>
+                </div>
+              </div>
+              <button class="btn btn-dark btn-sm" onclick="saveDriverRateSetting()" style="padding: 6px 12px; font-size: 11px;">
+                Save Rate
+              </button>
+            </div>
+
+            <!-- Month Cycle Selector -->
+            <select id="selectSettlementMonth" class="form-select" style="padding: 7px 12px; font-size: 12px; border-radius: 20px; font-weight: 600;" onchange="changeSettlementMonth(this.value)">
+              <option value="2026-08">August 2026 (Active Cycle)</option>
+              <option value="2026-07">July 2026 (Settled)</option>
+              <option value="2026-06">June 2026 (Settled)</option>
+            </select>
+
+            <button class="btn btn-subtle btn-sm" onclick="calculateAdminSettlements()" title="Recalculate monthly loop earnings">
+              🔄 Recalculate Cycle
+            </button>
+
+            <!-- Bulk Dispatch Button -->
+            <button class="btn btn-dark btn-sm" id="btnBulkDispatch" onclick="openBulkDispatchModal()" style="background: #1E1E22; color: #F9D058; font-weight: 700;">
+              ⚡ Bulk Dispatch All Settlements
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Monthly Settlement KPI Summary Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          
+          <!-- Total In-Transit Hours -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">In-Transit Driving Hours</span>
+              <span style="background: #EBE5FF; color: #7C3AED; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Monthly Fleet</span>
+            </div>
+            <div style="font-size: 28px; font-weight: 800; color: var(--accent-black);" id="sumInTransitHours">0.0 hrs</div>
+            <small style="color: #6B7280; font-size: 12px;">Active driving & video cast loop duration</small>
+          </div>
+
+          <!-- Total Verified Video Plays -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Verified Loop Plays</span>
+              <span style="background: #E6F8EE; color: #16A34A; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Audited Plays</span>
+            </div>
+            <div style="font-size: 28px; font-weight: 800; color: var(--accent-black);" id="sumVerifiedPlays">0</div>
+            <small style="color: #6B7280; font-size: 12px;">Total completed ad impressions</small>
+          </div>
+
+          <!-- Total Monthly Payout Amount -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Total Settlement Outflow</span>
+              <span style="background: #FEF3C7; color: #D97706; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;" id="sumActiveRateBadge">₦10.00 / play</span>
+            </div>
+            <div style="font-size: 28px; font-weight: 800; color: #D97706;" id="sumTotalPayout">₦0.00</div>
+            <small style="color: #6B7280; font-size: 12px;" id="sumPendingPayoutSub">Pending clearance: ₦0.00</small>
+          </div>
+
+          <!-- Fleet Settlement Status -->
+          <div style="background: #1E1E22; color: #fff; border-radius: 18px; padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase;">Batch Clearance</span>
+              <span style="background: #F9D058; color: #1E1E22; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;" id="sumEligibleDriversBadge">2 Drivers</span>
+            </div>
+            <div style="font-size: 22px; font-weight: 800; color: #F9D058;" id="sumDisbursementStatus">Ready for Bulk Dispatch</div>
+            <small style="color: #9CA3AF; font-size: 12px;" id="sumBatchRouteSub">Automated NIBSS Direct Transfer</small>
+          </div>
+
+        </div>
+
+        <!-- Settlements Table -->
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th>Driver & Vehicle</th>
+                <th>License Plate</th>
+                <th>Monthly Cycle</th>
+                <th>In-Transit Hours</th>
+                <th>Verified Plays</th>
+                <th>Payout Rate</th>
+                <th>Total Payout (₦)</th>
+                <th>Disbursement Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminSettlementsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Bulk Dispatch Confirmation Modal -->
+      <div class="modal-overlay" id="bulkDispatchModal" style="display: none;">
+        <div class="modal-card" style="max-width: 440px; border-radius: 22px; padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px; margin-bottom: 18px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="background: #1E1E22; color: #F9D058; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">⚡</div>
+              <div>
+                <h4 style="margin: 0; font-size: 15px; color: var(--accent-black);">Bulk Settlement Dispatch</h4>
+                <small style="color: var(--accent-gray-text);">NIBSS Direct Settlement Clearing</small>
+              </div>
+            </div>
+            <button class="modal-close-circle" onclick="closeBulkDispatchModal()">&times;</button>
+          </div>
+
+          <div style="background: #FAF8F4; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 18px;">
+            <span style="font-size: 11px; color: var(--accent-gray-text); text-transform: uppercase; font-weight: 700;">Total Payout to Disburse</span>
+            <div style="font-size: 32px; font-weight: 800; color: #D97706; margin: 4px 0;" id="modalBulkAmount">₦0.00</div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--accent-black);" id="modalBulkDriverCount">Crediting 0 Vehicle Drivers</div>
+          </div>
+
+          <div style="font-size: 13px; color: #4B5563; line-height: 1.5; margin-bottom: 20px;">
+            This action will initiate an immediate batch electronic funds transfer to the verified bank accounts of all drivers with pending monthly settlements.
+          </div>
+
+          <div class="modal-footer" style="margin-top: 0;">
+            <button type="button" class="btn btn-subtle" onclick="closeBulkDispatchModal()">Cancel</button>
+            <button type="button" class="btn btn-dark" id="btnConfirmBulkDispatch" onclick="executeBulkDispatch()" style="background: #1E1E22; color: #F9D058; font-weight: 700;">
+              💳 Confirm & Disburse All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab View 4: Customer Service & Helpdesk Oversight -->
+      <section id="viewSupport" class="card card-clean full-table-card" style="display: none; margin-bottom: 24px;">
+        <div class="card-title-row">
+          <div>
+            <h3>Customer Service & Dispute Oversight Hub</h3>
+            <p class="card-subtitle">Monitor customer support operations, driver payout complaints, and advertiser audit inquiries.</p>
+          </div>
+          <a href="/support" class="btn btn-dark btn-sm" target="_blank">
+            ↗ Open Live Support Desk
+          </a>
+        </div>
+
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Sender / Role</th>
+                <th>Category</th>
+                <th>Issue Subject</th>
+                <th>Priority</th>
+                <th>Assigned Agent</th>
+                <th>Resolution Notes</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="adminSupportTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab View 5: Platform Revenue & Financials Command Center -->
+      <section id="viewFinancials" class="card card-clean full-table-card" style="display: none; margin-bottom: 24px;">
+        <div class="card-title-row" style="flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 16px; margin-bottom: 20px;">
+          <div>
+            <h3>Platform Financial Command Center</h3>
+            <p class="card-subtitle" id="finPeriodSub">Company gross ad revenue, driver settlement distributions, and monthly profit margins in Nigerian Naira (₦).</p>
+          </div>
+
+          <!-- Interactive Filter Controls (Today, Week, Month, Past Months) -->
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+            <div class="financial-filter-pills" style="display: inline-flex; background: #F3F4F6; padding: 3px; border-radius: 20px;">
+              <button class="nav-pill-btn btn-sm active" id="btnFilterAll" onclick="filterFinancialPeriod('all')">All Time</button>
+              <button class="nav-pill-btn btn-sm" id="btnFilterToday" onclick="filterFinancialPeriod('today')">Today</button>
+              <button class="nav-pill-btn btn-sm" id="btnFilterWeek" onclick="filterFinancialPeriod('week')">This Week</button>
+              <button class="nav-pill-btn btn-sm" id="btnFilterMonth" onclick="filterFinancialPeriod('month')">This Month</button>
+            </div>
+
+            <!-- Past Month Selector Dropdown -->
+            <div style="display: inline-flex; align-items: center; gap: 6px;">
+              <select id="selectPastMonth" class="form-select" style="padding: 6px 12px; font-size: 12px; border-radius: 20px; font-weight: 600;" onchange="filterFinancialPastMonth(this.value)">
+                <option value="">📅 Filter by Past Month...</option>
+                <option value="2026-08">August 2026</option>
+                <option value="2026-07">July 2026</option>
+                <option value="2026-06">June 2026</option>
+                <option value="2026-05">May 2026</option>
+                <option value="2026-04">April 2026</option>
+                <option value="2026-03">March 2026</option>
+              </select>
+            </div>
+
+            <button class="btn btn-dark btn-sm" onclick="exportFinancialsCSV()">
+              📥 Export Financial Report
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Financial Bento KPI Cards (Crextio Aesthetic) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          
+          <!-- Gross Revenue (Inflow) -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Gross Ad Revenue (Inflow)</span>
+              <span style="background: #EBE5FF; color: #7C3AED; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">₦25 / play</span>
+            </div>
+            <div style="font-size: 30px; font-weight: 800; color: var(--accent-black);" id="finGrossRevenue">₦0.00</div>
+            <small style="color: #6B7280; font-size: 12px;" id="finCommittedBudget">Total Invoiced: ₦0</small>
+          </div>
+
+          <!-- Driver Payouts (Outflow) -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Driver Settlements (Outflow)</span>
+              <span style="background: #FEF3C7; color: #D97706; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">₦10 / play</span>
+            </div>
+            <div style="font-size: 30px; font-weight: 800; color: #D97706;" id="finDriverPayouts">₦0.00</div>
+            <small style="color: #6B7280; font-size: 12px;">Automated fleet disbursements</small>
+          </div>
+
+          <!-- Net Company Profit -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Net Company Profit</span>
+              <span style="background: #E6F8EE; color: #16A34A; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">60.0% Margin</span>
+            </div>
+            <div style="font-size: 30px; font-weight: 800; color: #16A34A;" id="finNetProfit">₦0.00</div>
+            <small style="color: #6B7280; font-size: 12px;">₦15.00 retained margin per play</small>
+          </div>
+
+          <!-- Verified Plays & Ads Placed -->
+          <div style="background: #1E1E22; color: #fff; border-radius: 18px; padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase;">Verified Impressions</span>
+              <span style="background: #F9D058; color: #1E1E22; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;" id="finTotalAdsBadge">3 Campaigns</span>
+            </div>
+            <div style="font-size: 30px; font-weight: 800; color: #F9D058;" id="finTotalPlays">0</div>
+            <small style="color: #9CA3AF; font-size: 12px;">100% verified DOOH playback loops</small>
+          </div>
+
+        </div>
+
+        <!-- Monthly Financial Comparison Matrix (Historical Trends) -->
+        <div style="margin-bottom: 28px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="font-size: 15px; font-weight: 700; margin: 0; color: var(--accent-black);">
+              📅 Monthly Revenue & Driver Payout Comparison (Past 6 Months)
+            </h4>
+            <span style="font-size: 11px; color: var(--accent-gray-text);">Audited Financial Statements in NGN (₦)</span>
+          </div>
+
+          <div class="table-container">
+            <table class="clean-table" style="background: #FAF8F4; border-radius: 14px;">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Verified Impressions</th>
+                  <th>Gross Ad Inflow (₦25/play)</th>
+                  <th>Driver Payouts (₦10/play)</th>
+                  <th>Net Platform Profit</th>
+                  <th>Gross Margin</th>
+                </tr>
+              </thead>
+              <tbody id="adminMonthlyTrendsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- All Placed Ads Portfolio & Financial Performance Table -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h4 style="font-size: 15px; font-weight: 700; margin: 0; color: var(--accent-black);">
+                🎬 All Placed Ad Campaigns & Revenue Realization
+              </h4>
+              <p class="card-subtitle" style="margin-top: 2px;">Itemized breakdown of every ad placed, committed budget, and driver payout incurred.</p>
+            </div>
+            <div class="search-pill-container">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="Filter placed ads..." class="search-input" oninput="filterPlacedAdsTable(this.value)">
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="clean-table">
+              <thead>
+                <tr>
+                  <th>Creative</th>
+                  <th>Campaign Title</th>
+                  <th>Advertiser Client</th>
+                  <th>City Hub</th>
+                  <th>Flight Dates</th>
+                  <th>Budget Placed (₦)</th>
+                  <th>Verified Plays</th>
+                  <th>Gross Revenue (₦)</th>
+                  <th>Driver Payout (₦)</th>
+                  <th>Net Profit (₦)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminPlacedAdsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Tab View 6: Platform User Directory & Profile Hub -->
+      <section id="viewUsers" class="card card-clean full-table-card" style="display: none; margin-bottom: 24px;">
+        
+        <!-- Header & Search Controls -->
+        <div class="card-title-row" style="flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 16px; margin-bottom: 20px;">
+          <div>
+            <h3>Platform User Directory</h3>
+            <p class="card-subtitle">Comprehensive registry of drivers, advertisers, and customer service staff across TripCast.</p>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <!-- Role Filter Pills -->
+            <div class="financial-filter-pills" style="display: inline-flex; background: #F3F4F6; padding: 3px; border-radius: 20px;">
+              <button class="nav-pill-btn btn-sm active" id="userFilterAll" onclick="filterUserRole('ALL')">All Users</button>
+              <button class="nav-pill-btn btn-sm" id="userFilterDriver" onclick="filterUserRole('DRIVER')">🚗 Drivers</button>
+              <button class="nav-pill-btn btn-sm" id="userFilterClient" onclick="filterUserRole('CLIENT')">📢 Advertisers</button>
+              <button class="nav-pill-btn btn-sm" id="userFilterSupport" onclick="filterUserRole('SUPPORT')">💬 Customer Care</button>
+            </div>
+
+            <!-- Instant Search Input -->
+            <div class="search-pill-container" style="margin: 0;">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="userSearchInput" placeholder="Search name, email, plate, brand..." class="search-input" oninput="filterUsersTable(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Directory KPI Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          
+          <!-- Registered Drivers -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Vehicle Drivers</span>
+              <span style="background: #E6F8EE; color: #16A34A; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;" id="dirActiveDriversPill">Active Fleet</span>
+            </div>
+            <div style="font-size: 28px; font-weight: 800; color: var(--accent-black);" id="dirDriversCount">0</div>
+            <small style="color: #6B7280; font-size: 12px;" id="dirDriversSub">Transit tablets & active casting</small>
+          </div>
+
+          <!-- Brand Advertisers -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Brand Advertisers</span>
+              <span style="background: #EBE5FF; color: #7C3AED; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;" id="dirAdvertiserBudgetPill">₦1.2M+ Capital</span>
+            </div>
+            <div style="font-size: 28px; font-weight: 800; color: var(--accent-black);" id="dirAdvertisersCount">0</div>
+            <small style="color: #6B7280; font-size: 12px;" id="dirAdvertisersSub">Active campaign accounts</small>
+          </div>
+
+          <!-- Customer Service -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--accent-gray-text); text-transform: uppercase;">Customer Service</span>
+              <span style="background: #FEF3C7; color: #D97706; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Support Desk</span>
+            </div>
+            <div style="font-size: 28px; font-weight: 800; color: #D97706;" id="dirSupportCount">0</div>
+            <small style="color: #6B7280; font-size: 12px;">Dispute resolution & helpdesk</small>
+          </div>
+
+          <!-- Total Platform Community -->
+          <div style="background: #1E1E22; color: #fff; border-radius: 18px; padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase;">Platform Users</span>
+              <span style="background: #F9D058; color: #1E1E22; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">DOOH Network</span>
+            </div>
+            <div style="font-size: 28px; font-weight: 800; color: #F9D058;" id="dirTotalUsersCount">0</div>
+            <small style="color: #9CA3AF; font-size: 12px;">Unified Nigerian DOOH ecosystem</small>
+          </div>
+
+        </div>
+
+        <!-- Users Directory Table -->
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th>User Details</th>
+                <th>Role</th>
+                <th>Contact Info</th>
+                <th>Date Joined</th>
+                <th>Operational & Financial Highlights</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- User Profile & Financial Ledger Modal -->
+      <div class="modal-overlay" id="userProfileModal" style="display: none;">
+        <div class="modal-card" style="max-width: 580px; border-radius: 22px; padding: 26px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px; margin-bottom: 18px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="avatar-circle" id="modalUserAvatar" style="width: 42px; height: 42px; font-size: 16px; background: #1E1E22; color: #F9D058;">EO</div>
+              <div>
+                <h4 style="margin: 0; font-size: 17px; color: var(--accent-black);" id="modalUserName">User Name</h4>
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 2px;">
+                  <span class="status-pill active" id="modalUserRoleBadge" style="font-size: 11px;">• DRIVER</span>
+                  <small style="color: var(--accent-gray-text);" id="modalUserId">ID: usr_...</small>
+                </div>
+              </div>
+            </div>
+            <button class="modal-close-circle" onclick="closeUserProfileModal()">&times;</button>
+          </div>
+
+          <!-- Modal Body with Role-Specific Details -->
+          <div id="modalUserContent"></div>
+
+          <div class="modal-footer" style="margin-top: 20px;">
+            <button type="button" class="btn btn-subtle" onclick="closeUserProfileModal()">Close Profile</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

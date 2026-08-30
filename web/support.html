@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripCast | Customer Support & Helpdesk Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="canvas-wrapper">
+
+    <!-- 1. Dedicated Support Agent Login Screen -->
+    <div id="loginSection" class="auth-wrapper" style="display: none;">
+      <div class="auth-card">
+        <div class="brand-pill" style="margin-bottom: 24px; display: inline-flex;">
+          <span class="brand-dot" style="background: #10B981;"></span>
+          <span class="brand-name">TripCast</span>
+          <span class="badge-role" style="background: #E6F8EE; color: #16A34A;">Support Desk</span>
+        </div>
+        <h2 class="auth-title">Customer Care Login</h2>
+        <p class="auth-subtitle">Sign in to triage, investigate, and resolve driver payout disputes and advertiser campaign inquiries.</p>
+
+        <form id="supportLoginForm" onsubmit="handleSupportLogin(event)">
+          <div class="form-group">
+            <label>Support Agent Email</label>
+            <input type="email" id="supportEmail" class="form-input" value="support@tripcast.io" placeholder="agent@tripcast.io" required>
+          </div>
+          <div class="form-group">
+            <label>Agent Access Key / PIN</label>
+            <input type="password" id="supportPin" class="form-input" value="agent123" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-dark btn-block" style="margin-top: 10px;">Enter Support Dashboard</button>
+        </form>
+
+        <div class="auth-footer">
+          <span>Switch to <a href="/admin">Admin Console</a> • <a href="/driver">Driver Hub</a> • <a href="/advertiser">Advertiser Portal</a></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Customer Support Main Dashboard -->
+    <div id="dashboardSection" class="app-container" style="display: none;">
+      
+      <!-- Top Navigation Bar -->
+      <header class="app-header">
+        <div class="brand-pill">
+          <span class="brand-dot" style="background: #10B981;"></span>
+          <span class="brand-name">TripCast</span>
+          <span class="badge-role" style="background: #E6F8EE; color: #16A34A;">Helpdesk Hub</span>
+        </div>
+
+        <nav class="center-nav-pill">
+          <button class="nav-pill-btn active" id="tabAllTickets" onclick="filterSupportCategory('ALL')">
+            All Tickets <span class="nav-badge" id="badgeAllTickets">2</span>
+          </button>
+          <button class="nav-pill-btn" id="tabDriverDisputes" onclick="filterSupportCategory('DRIVER')">
+            🚗 Driver Disputes <span class="nav-badge" id="badgeDriverTickets">1</span>
+          </button>
+          <button class="nav-pill-btn" id="tabClientInquiries" onclick="filterSupportCategory('CLIENT')">
+            🏢 Advertiser Inquiries <span class="nav-badge" id="badgeClientTickets">1</span>
+          </button>
+          <button class="nav-pill-btn" id="tabResolved" onclick="filterSupportCategory('RESOLVED')">
+            ✓ Resolved Archive
+          </button>
+        </nav>
+
+        <div class="header-right-group">
+          <button class="icon-circle-btn" onclick="refreshSupportData()" title="Refresh Ticket Queue">
+            <span>🔄</span>
+          </button>
+          <div class="user-avatar-pill" onclick="logoutSupport()" title="Click to Logout">
+            <div class="avatar-circle" id="agentInitials">AM</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Hero Greeting & Support Metrics -->
+      <section class="hero-section">
+        <div class="hero-left">
+          <h1 class="hero-greeting" id="supportGreeting">Hello Amara (Customer Care)</h1>
+          
+          <div class="segmented-progress-card">
+            <div class="seg-item seg-primary">
+              <span class="seg-label">Queue Health</span>
+              <span class="seg-val">96% SLA Met</span>
+            </div>
+            <div class="seg-item seg-yellow">
+              <span class="seg-label">Avg Speed</span>
+              <span class="seg-val" id="kpiAvgSpeed">18 mins</span>
+            </div>
+            <div class="seg-item seg-striped">
+              <span class="seg-label">Assigned to Me</span>
+              <span class="seg-val" id="kpiAssignedMe">1 Active</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Big Right KPI Numbers -->
+        <div class="hero-stats-row">
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="statOpenCount">1</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">📬</span> Unassigned Tickets
+            </div>
+          </div>
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="statInProgress">1</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">⚡</span> In Investigation
+            </div>
+          </div>
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="statResolvedCount">0</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">✓</span> Resolved Today
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Support Ticket Queue Table -->
+      <section class="card card-clean full-table-card" style="margin-bottom: 24px;">
+        <div class="card-title-row">
+          <div>
+            <h3>Support & Dispute Triage Queue</h3>
+            <p class="card-subtitle">Real-time driver payout disputes, tablet hardware reports, and advertiser campaign inquiries.</p>
+          </div>
+          <div class="search-pill-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Search ticket or sender..." class="search-input" oninput="searchTickets(this.value)">
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Sender & Role</th>
+                <th>Category</th>
+                <th>Subject & Summary</th>
+                <th>Priority</th>
+                <th>Assigned Agent</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="supportTicketsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Ticket Investigation & Resolution Modal -->
+  <div class="modal-overlay" id="ticketResolutionModal">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalTicketTitle">Ticket TC-8921</h3>
+          <p class="modal-sub" id="modalTicketSub">Sender: Emeka Okafor (Driver) • Category: Payout Dispute</p>
+        </div>
+        <button class="modal-close-circle" onclick="closeTicketModal()">&times;</button>
+      </div>
+
+      <div class="ticket-detail-body">
+        <div class="ticket-desc-card">
+          <span class="calc-label">Complaint Description:</span>
+          <p id="modalTicketDesc" style="font-size: 13px; color: var(--accent-black); margin-top: 6px; line-height: 1.5;"></p>
+        </div>
+
+        <form id="resolutionForm" onsubmit="handleResolveTicket(event)" style="margin-top: 18px;">
+          <input type="hidden" id="modalTicketId">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Assign Agent</label>
+              <select id="modalAssignAgent" class="form-select">
+                <option value="Amara Customer Care">Amara Customer Care (Me)</option>
+                <option value="Tolu Operations Lead">Tolu Operations Lead</option>
+                <option value="Admin Team">Admin Team</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Update Status</label>
+              <select id="modalTicketStatus" class="form-select">
+                <option value="IN_PROGRESS">⚡ IN_PROGRESS (Investigating)</option>
+                <option value="RESOLVED">✓ RESOLVED (Dispute Closed)</option>
+                <option value="OPEN">📬 OPEN (Unassigned)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Resolution Notes / Audit Response</label>
+            <textarea id="modalResolutionNotes" class="form-input" rows="3" placeholder="Enter investigation findings, payout adjustments, or client audit reply..." style="resize: vertical; min-height: 80px;" required></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-subtle" onclick="closeTicketModal()">Cancel</button>
+            <button type="submit" class="btn btn-dark">Update & Save Resolution</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="support.js"></script>
+</body>
+</html>

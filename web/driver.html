@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripCast | Driver Portal & In-Transit Cast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="canvas-wrapper">
+
+    <!-- 1. Dedicated Driver Login Screen -->
+    <div id="loginSection" class="auth-wrapper" style="display: none;">
+      <div class="auth-card">
+        <div class="brand-pill" style="margin-bottom: 24px; display: inline-flex;">
+          <span class="brand-dot"></span>
+          <span class="brand-name">TripCast</span>
+          <span class="badge-role">Driver Hub</span>
+        </div>
+        <h2 class="auth-title">Driver Shift Login</h2>
+        <p class="auth-subtitle">Sign in with your driver credentials or PIN to launch in-transit Cast Mode and track your daily earnings.</p>
+
+        <form id="driverLoginForm" onsubmit="handleDriverLogin(event)">
+          <div class="form-group">
+            <label>Driver Email or Phone</label>
+            <input type="text" id="driverEmail" class="form-input" value="emeka.driver@tripcast.io" placeholder="emeka@driver.com" required>
+          </div>
+          <div class="form-group">
+            <label>Driver Security PIN</label>
+            <input type="password" id="driverPin" class="form-input" value="1234" placeholder="••••" required>
+          </div>
+          <button type="submit" class="btn btn-dark btn-block" style="margin-top: 10px;">Sign In & Open Shift</button>
+        </form>
+
+        <div class="auth-footer">
+          <span>Are you an advertiser? <a href="/advertiser">Advertiser Portal</a> • <a href="/admin">Admin Console</a></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Driver Main Dashboard & In-Transit Cast Engine -->
+    <div id="dashboardSection" class="app-container" style="display: none;">
+      
+      <!-- Top Navigation Bar -->
+      <header class="app-header">
+        <div class="brand-pill">
+          <span class="brand-dot"></span>
+          <span class="brand-name">TripCast</span>
+          <span class="badge-role" id="vehiclePlateBadge">LAG-492-AA</span>
+        </div>
+
+        <!-- Master Turn On Cast Toggle Pill in Header -->
+        <div class="cast-toggle-pill" id="castToggleContainer">
+          <span class="cast-status-dot" id="castDot"></span>
+          <span class="cast-label-text" id="castStatusText">Cast Mode: OFF</span>
+          <button class="btn btn-cast-toggle" id="btnToggleCast" onclick="toggleCastMode()">
+            ⚡ Turn ON Cast
+          </button>
+        </div>
+
+        <div class="header-right-group">
+          <button class="btn btn-subtle btn-sm" onclick="openDriverSupportModal()" title="File a Payout Dispute or Support Request">
+            💬 Support & Complaints
+          </button>
+          <button class="icon-circle-btn" onclick="refreshDriverData()" title="Refresh Shift Telemetry">
+            <span>🔄</span>
+          </button>
+          <div class="user-avatar-pill" onclick="logoutDriver()" title="Click to End Shift & Logout">
+            <div class="avatar-circle" id="driverInitials">EO</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Hero Greeting & Shift Earnings Summary -->
+      <section class="hero-section">
+        <div class="hero-left">
+          <h1 class="hero-greeting" id="driverGreeting">Hello Emeka Okafor</h1>
+          
+          <div class="segmented-progress-card">
+            <div class="seg-item seg-primary">
+              <span class="seg-label">Admin Active Rate</span>
+              <span class="seg-val" id="driverPayoutRateVal">₦10.00 / play</span>
+            </div>
+            <div class="seg-item seg-yellow">
+              <span class="seg-label">Tablet Battery</span>
+              <span class="seg-val" id="driverBattery">94% 🔋</span>
+            </div>
+            <div class="seg-item seg-striped">
+              <span class="seg-label">Shift Status</span>
+              <span class="seg-val" id="shiftStatusBadge">Active Route</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Big Right KPI Numbers in Naira -->
+        <div class="hero-stats-row">
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="driverShiftPlays">0</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">🚗</span> Completed Plays
+            </div>
+          </div>
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="driverShiftEarnings">₦0.00</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">💰</span> Today's Earnings
+            </div>
+          </div>
+          <div class="kpi-stat-item">
+            <div class="kpi-num" id="driverWeeklyTotal">₦1,200</div>
+            <div class="kpi-label">
+              <span class="kpi-icon">⚡</span> Week Settlements
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live In-Transit Cast Video Player Card (16:9 Aspect Ratio) -->
+      <section class="card card-clean cast-screen-card" id="castPlayerCard" style="margin-bottom: 24px;">
+        <div class="card-title-row">
+          <div>
+            <h3>In-Transit Video Cast Engine (16:9 DOOH Display)</h3>
+            <p class="card-subtitle" id="castPlayerSub">When Cast Mode is ON, videos loop automatically and credit ₦10.00 per verified play to your shift balance.</p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn btn-subtle btn-sm" id="btnFullscreenTop" onclick="toggleFullscreenCast()">
+              ⛶ Expand Screen
+            </button>
+            <span class="status-pill active" id="castPlayerBadge">Ready for Transit</span>
+          </div>
+        </div>
+
+        <!-- 16:9 Video Player Container -->
+        <div class="video-container-16-9">
+          <div class="driver-video-box" id="castVideoContainer">
+            
+            <!-- Video Overlay HUD -->
+            <div class="video-overlay-hud" id="videoHud">
+              <span class="hud-tag">NOW PLAYING</span>
+              <span class="hud-campaign" id="hudCampaignTitle">Traffic & Urban Motion Campaign</span>
+              <span class="hud-plays" id="hudLivePlays">Shift Plays: 0 (₦0.00)</span>
+            </div>
+
+            <!-- Fullscreen Exit Button (Floating Top Right) -->
+            <button class="btn-exit-fullscreen" id="btnExitFullscreen" onclick="toggleFullscreenCast()" title="Minimize / Exit Fullscreen">
+              ✕ Exit Fullscreen (ESC)
+            </button>
+
+            <!-- Standby Screen Placeholder -->
+            <div class="cast-standby-screen" id="castStandbyScreen">
+              <div class="standby-content">
+                <div class="standby-icon">📺</div>
+                <h4>TripCast 16:9 Video Engine is in Standby</h4>
+                <p>Click "Turn ON Cast" to begin streaming today's entertainment & verified advert playlist.</p>
+                <button class="btn btn-dark" style="margin-top: 16px;" onclick="toggleCastMode()">⚡ Launch In-Transit Cast</button>
+              </div>
+            </div>
+
+            <!-- Active Video Element -->
+            <video id="driverCastVideo" class="cast-active-video" style="display: none;" playsinline muted></video>
+          </div>
+
+          <!-- Video Progress Strip -->
+          <div class="video-progress-bar-wrap">
+            <div class="video-progress-fill" id="castProgressFill"></div>
+          </div>
+
+          <!-- Interactive Cast Player Control Bar -->
+          <div class="cast-controls-bar">
+            <div class="controls-left">
+              <button class="control-btn" id="btnPauseCast" onclick="togglePauseCast()" title="Pause/Resume Video">
+                ⏸ Pause
+              </button>
+              <button class="control-btn" id="btnStopCast" onclick="stopCastMode()" title="Stop Cast">
+                ⏹ Stop
+              </button>
+              <button class="control-btn" id="btnMuteToggle" onclick="toggleMuteCast()" title="Mute/Unmute Audio">
+                🔇 Muted
+              </button>
+            </div>
+
+            <div class="controls-center">
+              <span class="playlist-indicator" id="playlistProgressText">Looping Advert 1 of 2</span>
+            </div>
+
+            <div class="controls-right">
+              <button class="control-btn highlight" onclick="toggleFullscreenCast()" title="Expand to Fullscreen Tablet View">
+                ⛶ Fullscreen Cast
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bento Grid: Shift Details & Weekly Settlements -->
+      <div class="bento-grid" style="grid-template-columns: 1fr 1fr;">
+        
+        <!-- Left: Today's Active Playlist -->
+        <div class="card card-clean">
+          <div class="card-title-row">
+            <h3>Today's Cast Playlist</h3>
+            <span class="badge-count" id="playlistCountBadge">2 Ads Active</span>
+          </div>
+          <div class="table-container">
+            <table class="clean-table">
+              <thead>
+                <tr>
+                  <th>Ad Video</th>
+                  <th>Campaign</th>
+                  <th>Target City</th>
+                  <th>Payout / Play</th>
+                </tr>
+              </thead>
+              <tbody id="driverPlaylistTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right: Weekly Settlements History -->
+        <div class="card card-clean">
+          <div class="card-title-row">
+            <h3>Weekly Bank Settlements (Naira)</h3>
+            <button class="arrow-circle-btn" onclick="refreshDriverData()">↗</button>
+          </div>
+          <div class="table-container">
+            <table class="clean-table">
+              <thead>
+                <tr>
+                  <th>Settlement Period</th>
+                  <th>Verified Plays</th>
+                  <th>Payout Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="driverPayoutsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Driver Support & Dispute Modal -->
+  <div class="modal-overlay" id="driverSupportModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3>File Support Ticket / Dispute</h3>
+          <p class="modal-sub">Direct assistance for payout discrepancies, tablet hardware, or offline sync issues.</p>
+        </div>
+        <button class="modal-close-circle" onclick="closeDriverSupportModal()">&times;</button>
+      </div>
+
+      <form id="driverSupportForm" onsubmit="handleDriverSubmitTicket(event)">
+        <div class="form-group">
+          <label>Issue Category</label>
+          <select id="ticketCategory" class="form-select" required>
+            <option value="PAYOUT_DISPUTE">💰 Payout / Earnings Discrepancy</option>
+            <option value="HARDWARE_ISSUE">📱 Tablet Hardware / Screen / Battery Issue</option>
+            <option value="SYNC_ERROR">🔄 Offline Video Sync / Manifest Problem</option>
+            <option value="GENERAL">💬 General Inquiry / Shift Support</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Issue Subject</label>
+          <input type="text" id="ticketSubject" class="form-input" placeholder="e.g. Missing 25 plays from yesterday's Lekki shift" required>
+        </div>
+
+        <div class="form-group">
+          <label>Detailed Description</label>
+          <textarea id="ticketDescription" class="form-input" rows="4" placeholder="Please describe what happened, shift times, and approximate plays affected..." style="resize: vertical; min-height: 90px;" required></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-subtle" onclick="closeDriverSupportModal()">Cancel</button>
+          <button type="submit" class="btn btn-dark">Submit Ticket to Customer Care</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="driver.js"></script>
+</body>
+</html>
