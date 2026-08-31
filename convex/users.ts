@@ -163,9 +163,19 @@ export const register = mutation({
 });
 
 export const getById = query({
-  args: { id: v.id("users") },
+  args: { 
+    id: v.optional(v.id("users")),
+    userId: v.optional(v.string())
+  },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    if (args.id) return await ctx.db.get(args.id);
+    if (args.userId) {
+      return await ctx.db
+        .query("users")
+        .filter((q) => q.eq(q.field("userId"), args.userId))
+        .first();
+    }
+    return null;
   },
 });
 

@@ -251,3 +251,59 @@ async function handleResolveTicket(e) {
     console.error('Error updating ticket:', err);
   }
 }
+
+// ============================================================================
+// Support Agent Profile & Security Modal Handlers
+// ============================================================================
+
+function openSupportProfileModal() {
+  document.getElementById('profileSupportEmail').textContent = currentSupportUser?.email || 'support@tripcast.io';
+  document.getElementById('supportProfilePhone').value = currentSupportUser?.phone || '+234 809 555 6677';
+  document.getElementById('supportProfilePassword').value = '';
+  document.getElementById('supportProfileModal').style.display = 'flex';
+}
+
+function closeSupportProfileModal() {
+  document.getElementById('supportProfileModal').style.display = 'none';
+}
+
+async function handleSupportSaveProfile(e) {
+  e.preventDefault();
+
+  const phone = document.getElementById('supportProfilePhone').value.trim();
+  const password = document.getElementById('supportProfilePassword').value.trim();
+
+  const btn = document.getElementById('btnSaveSupportProfile');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving to Convex...';
+
+  try {
+    const payload = {
+      user_id: currentSupportUser?.id || 'usr_support_1',
+      phone
+    };
+    if (password) {
+      payload.password = password;
+    }
+
+    const res = await fetch(`${API_BASE}/api/user/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      closeSupportProfileModal();
+      alert('✅ Staff Credentials Secured!\n\nYour phone number and access key have been updated directly in Convex Cloud.');
+    } else {
+      alert('Failed to update support agent profile.');
+    }
+  } catch (err) {
+    console.error('Error saving support profile:', err);
+    alert('Network error saving profile to cloud.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}

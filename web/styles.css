@@ -321,6 +321,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
@@ -523,12 +525,17 @@ body {
   width: 160px;
 }
 
-.table-container {
+.table-container,
+.card-surface:has(> table),
+.card-surface:has(.clean-table) {
+  width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .clean-table {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -870,16 +877,19 @@ body {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 99999;
 }
 
 .modal-card {
   background: #FFFFFF;
-  border-radius: var(--radius-xl);
-  width: 520px;
-  max-width: 90vw;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: min(540px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  padding: 30px;
+  padding: 28px;
 }
 
 .modal-header {
@@ -901,14 +911,25 @@ body {
   margin-top: 2px;
 }
 
-.modal-close-circle {
+.modal-close-circle,
+.modal-close-btn {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   background: #F3F4F6;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-black);
+  transition: background 0.15s ease;
+}
+
+.modal-close-circle:hover,
+.modal-close-btn:hover {
+  background: #E5E7EB;
 }
 
 .form-group {
@@ -1008,58 +1029,289 @@ body {
   font-size: 11px;
 }
 
-@media (max-width: 1380px) {
+/* ==========================================================================
+   Comprehensive Responsive Design System (All Devices: Mobile, Tablet, Desktop)
+   ========================================================================== */
+
+/* 1. Large Laptops & Standard Desktops (<= 1440px) */
+@media (max-width: 1440px) {
   .app-container {
-    padding: 24px 30px 40px 30px;
+    max-width: 1360px;
+    padding: 24px 32px 48px 32px;
   }
   .bento-grid {
-    grid-template-columns: 240px 1fr 250px;
-    gap: 16px;
+    grid-template-columns: 240px minmax(0, 1fr) 260px;
+    gap: 18px;
   }
 }
 
-@media (max-width: 1080px) {
+/* 2. Medium Laptops & Landscape Tablets (<= 1200px) */
+@media (max-width: 1200px) {
   .app-container {
-    padding: 20px 20px 32px 20px;
+    padding: 20px 24px 40px 24px;
   }
   .bento-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .bento-col-right {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+}
+
+/* 3. Tablets & Small Laptops (<= 992px) */
+@media (max-width: 992px) {
+  .app-container {
+    padding: 18px 20px 36px 20px;
   }
   .hero-section {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 18px;
+    align-items: stretch;
+    gap: 20px;
+  }
+  .hero-left {
+    width: 100%;
   }
   .hero-stats-row {
     width: 100%;
+    display: flex;
     justify-content: space-between;
-  }
-}
-
-@media (max-width: 768px) {
-  .app-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-  }
-  .center-nav-pill {
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 6px;
-  }
-  .header-right-group {
-    justify-content: space-between;
-  }
-  .segmented-progress-card {
-    flex-wrap: wrap;
-    border-radius: var(--radius-md);
-  }
-  .hero-stats-row {
-    flex-direction: column;
-    gap: 14px;
+    gap: 16px;
   }
   .bento-grid {
     grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .bento-col-right {
+    grid-column: span 1;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .timeline-card,
+  .calendar-strip-card,
+  .card-surface {
+    width: 100%;
+  }
+  .gateway-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+/* 4. Phablets & Mobile Landscape (<= 768px) */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 14px 14px 36px 14px;
+    width: 100%;
+  }
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .header-right-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+  }
+  .brand-pill {
+    align-self: flex-start;
+  }
+  .center-nav-pill {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    scrollbar-width: none;
+    padding: 4px;
+    gap: 4px;
+  }
+  .center-nav-pill::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-pill-btn {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  .hero-greeting {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .segmented-progress-card {
+    display: flex;
+    flex-wrap: wrap;
+    border-radius: 16px;
+    padding: 6px;
+    gap: 6px;
+  }
+  .seg-item {
+    flex: 1 1 calc(50% - 6px);
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+  .hero-stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+  .kpi-stat-item {
+    padding: 10px 12px;
+  }
+  .kpi-num {
+    font-size: 26px;
+  }
+  .card-surface {
+    padding: 18px 16px;
+    border-radius: var(--radius-md);
+  }
+  .table-container,
+  .card-surface:has(> table),
+  .card-surface:has(.clean-table) {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .clean-table {
+    min-width: 540px;
+  }
+  .clean-table th,
+  .clean-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .modal-card {
+    width: 95vw;
+    max-width: 95vw;
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+  .form-row-2 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .cast-video-container {
+    aspect-ratio: 16 / 9;
+    max-height: 48vh;
+    border-radius: 16px;
+  }
+  .cast-hud-overlay {
+    padding: 10px 12px;
+  }
+  .cast-toggle-pill {
+    padding: 4px 10px;
+  }
+  .cast-controls-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+    border-radius: 18px;
+    padding: 10px 14px;
+    justify-content: center;
+  }
+  .controls-left, .controls-right {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .playlist-indicator {
+    order: -1;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .gateway-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .gateway-hero .hero-greeting {
+    font-size: 28px !important;
+  }
+}
+
+/* 5. Compact Smartphones (<= 480px) */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 10px 10px 28px 10px;
+  }
+  .brand-pill {
+    padding: 5px 12px;
+  }
+  .brand-name {
+    font-size: 14px;
+  }
+  .badge-role {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+  .hero-greeting {
+    font-size: 20px;
+  }
+  .hero-stats-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .kpi-num {
+    font-size: 22px;
+  }
+  .kpi-label {
+    font-size: 10px;
+  }
+  .seg-item {
+    flex: 1 1 100%;
+  }
+  .auth-wrapper {
+    padding: 16px 12px;
+  }
+  .auth-card {
+    padding: 20px 14px;
+    border-radius: 18px;
+    width: 100%;
+  }
+  .auth-title {
+    font-size: 19px;
+  }
+  .auth-subtitle {
+    font-size: 12px;
+  }
+  .auth-toggle-group {
+    padding: 3px;
+    gap: 4px;
+  }
+  .auth-toggle-btn {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .header-right-group .btn {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  .modal-card {
+    padding: 16px 12px;
+    border-radius: 16px;
+  }
+  .modal-header h3 {
+    font-size: 16px;
+  }
+  .dot-matrix-grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+  }
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS devices */
   }
 }
 
@@ -1077,6 +1329,12 @@ body {
 .gateway-hero {
   max-width: 1100px;
   width: 100%;
+}
+
+.gateway-title {
+  font-size: clamp(24px, 4.5vw, 42px) !important;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .gateway-grid {

@@ -1596,9 +1596,36 @@ app.get('/api/admin/users', async (req: Request, res: Response) => {
   });
 });
 
-app.get('/api/admin/users/:id', (req: Request, res: Response) => {
+app.get('/api/admin/users/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const user = users.find(u => u.id === id);
+  let user = users.find(u => u.id === id);
+
+  if (!user) {
+    try {
+      const cloudUser: any = await convex.query(api.users.getById, { userId: String(id) });
+      if (cloudUser) {
+        user = {
+          id: cloudUser.userId || cloudUser._id,
+          email: cloudUser.email,
+          full_name: cloudUser.full_name,
+          role: cloudUser.role,
+          phone: cloudUser.phone,
+          company_name: cloudUser.company_name,
+          staff_id: cloudUser.staff_id,
+          city: cloudUser.city,
+          license_plate: cloudUser.license_plate,
+          bank_name: cloudUser.bank_name,
+          account_number: cloudUser.account_number,
+          account_name: cloudUser.account_name,
+          created_at: cloudUser.created_at,
+          status: cloudUser.status || 'ACTIVE'
+        };
+        users.push(user);
+      }
+    } catch (e: any) {
+      console.log('[CONVEX USER GET] Notice:', e.message);
+    }
+  }
 
   if (!user) {
     return res.status(404).json({ error: 'User not found' });

@@ -516,43 +516,85 @@ async function handleDriverSubmitTicket(e) {
 // ============================================================================
 
 function openDriverProfileModal() {
-  if (!currentDriver) return;
+  if (!currentDriver) {
+    const saved = sessionStorage.getItem('tripcast_driver') || sessionStorage.getItem('tripcast_driver_user');
+    if (saved) {
+      try { currentDriver = JSON.parse(saved); } catch (e) {}
+    }
+  }
 
-  const initials = currentDriver.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'DR';
-  document.getElementById('modalDriverProfileAvatar').textContent = initials;
-  document.getElementById('modalDriverProfileName').textContent = currentDriver.full_name;
+  if (!currentDriver) {
+    currentDriver = {
+      id: 'usr_driver_1',
+      full_name: 'Emeka Okafor',
+      email: 'emeka.driver@tripcast.io',
+      phone: '+234 803 123 4567',
+      role: 'DRIVER',
+      vehicle: {
+        license_plate: 'LAG-492-AA',
+        city: 'Lagos Island'
+      },
+      bank_name: 'Access Bank',
+      account_number: '0123456789'
+    };
+  }
+
+  const name = currentDriver.full_name || 'Transit Driver';
+  const initials = name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'DR';
+
+  const avatarEl = document.getElementById('modalDriverProfileAvatar');
+  if (avatarEl) avatarEl.textContent = initials;
+
+  const nameEl = document.getElementById('modalDriverProfileName');
+  if (nameEl) nameEl.textContent = name;
 
   const veh = currentDriver.vehicle || {};
-  document.getElementById('profileDriverPlate').textContent = veh.license_plate || currentDriver.license_plate || 'LAG-492-AA';
-  document.getElementById('profileDriverCity').textContent = veh.city || currentDriver.city || 'Lagos Island';
-  document.getElementById('profileDriverBank').textContent = `${currentDriver.bank_name || 'Access Bank'} (${currentDriver.account_number || '0123456789'})`;
-  document.getElementById('profileDriverEmail').textContent = currentDriver.email || 'driver@tripcast.io';
+  const plateEl = document.getElementById('profileDriverPlate');
+  if (plateEl) plateEl.textContent = veh.license_plate || currentDriver.license_plate || 'LAG-492-AA';
 
-  document.getElementById('driverProfilePhone').value = currentDriver.phone || '';
-  document.getElementById('driverProfilePin').value = '';
+  const cityEl = document.getElementById('profileDriverCity');
+  if (cityEl) cityEl.textContent = veh.city || currentDriver.city || 'Lagos Island';
 
-  document.getElementById('driverProfileModal').style.display = 'flex';
+  const bankEl = document.getElementById('profileDriverBank');
+  if (bankEl) bankEl.textContent = `${currentDriver.bank_name || 'Access Bank'} (${currentDriver.account_number || '0123456789'})`;
+
+  const emailEl = document.getElementById('profileDriverEmail');
+  if (emailEl) emailEl.textContent = currentDriver.email || 'driver@tripcast.io';
+
+  const phoneInput = document.getElementById('driverProfilePhone');
+  if (phoneInput) phoneInput.value = currentDriver.phone || '';
+
+  const pinInput = document.getElementById('driverProfilePin');
+  if (pinInput) pinInput.value = '';
+
+  const modal = document.getElementById('driverProfileModal');
+  if (modal) modal.style.display = 'flex';
 }
 
 function closeDriverProfileModal() {
-  document.getElementById('driverProfileModal').style.display = 'none';
+  const modal = document.getElementById('driverProfileModal');
+  if (modal) modal.style.display = 'none';
 }
 
 async function handleDriverSaveProfile(e) {
   e.preventDefault();
-  if (!currentDriver) return;
+  if (!currentDriver) openDriverProfileModal();
 
-  const phone = document.getElementById('driverProfilePhone').value.trim();
-  const pin = document.getElementById('driverProfilePin').value.trim();
+  const phoneInput = document.getElementById('driverProfilePhone');
+  const pinInput = document.getElementById('driverProfilePin');
+  const phone = phoneInput ? phoneInput.value.trim() : '';
+  const pin = pinInput ? pinInput.value.trim() : '';
 
   const btn = document.getElementById('btnSaveDriverProfile');
-  const origText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Saving to Convex...';
+  const origText = btn ? btn.textContent : 'Save Changes';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saving to Convex...';
+  }
 
   try {
     const payload = {
-      user_id: currentDriver.id,
+      user_id: currentDriver.id || 'usr_driver_1',
       phone
     };
     if (pin) {
@@ -568,6 +610,7 @@ async function handleDriverSaveProfile(e) {
     if (res.ok) {
       currentDriver.phone = phone;
       if (pin) currentDriver.pin = pin;
+      sessionStorage.setItem('tripcast_driver', JSON.stringify(currentDriver));
       sessionStorage.setItem('tripcast_driver_user', JSON.stringify(currentDriver));
       closeDriverProfileModal();
       alert('✅ Profile Secured!\n\nYour phone number and security PIN have been updated directly in Convex Cloud.');
@@ -578,8 +621,10 @@ async function handleDriverSaveProfile(e) {
     console.error('Error saving driver profile:', err);
     alert('Network error saving profile to cloud.');
   } finally {
-    btn.disabled = false;
-    btn.textContent = origText;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
   }
 }
 

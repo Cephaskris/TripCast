@@ -571,40 +571,76 @@ async function deleteAdvCampaign(campaignId, title) {
 // ============================================================================
 
 function openAdvUserProfileModal() {
-  if (!currentAdvertiser) return;
+  if (!currentAdvertiser) {
+    const saved = sessionStorage.getItem('tripcast_advertiser') || sessionStorage.getItem('tripcast_adv_user');
+    if (saved) {
+      try { currentAdvertiser = JSON.parse(saved); } catch (e) {}
+    }
+  }
 
-  const initials = currentAdvertiser.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AD';
-  document.getElementById('modalProfileAvatar').textContent = initials;
-  document.getElementById('modalProfileName').textContent = currentAdvertiser.full_name;
-  document.getElementById('profileViewEmail').textContent = currentAdvertiser.email;
-  document.getElementById('profileViewCompany').textContent = currentAdvertiser.company_name || 'Brand Enterprise';
-  document.getElementById('profileViewUserId').textContent = currentAdvertiser.id;
+  if (!currentAdvertiser) {
+    currentAdvertiser = {
+      id: 'usr_client_1',
+      full_name: 'Coca Cola Nigeria Ads',
+      company_name: 'Coca Cola HBC Nigeria',
+      email: 'advertiser@brand.com',
+      phone: '+234 802 333 4455',
+      role: 'CLIENT'
+    };
+  }
 
-  document.getElementById('advProfilePhone').value = currentAdvertiser.phone || '';
-  document.getElementById('advProfilePassword').value = '';
+  const name = currentAdvertiser.full_name || currentAdvertiser.company_name || 'Brand Advertiser';
+  const initials = name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AD';
 
-  document.getElementById('advProfileModal').style.display = 'flex';
+  const avatarEl = document.getElementById('modalProfileAvatar');
+  if (avatarEl) avatarEl.textContent = initials;
+
+  const nameEl = document.getElementById('modalProfileName');
+  if (nameEl) nameEl.textContent = name;
+
+  const emailEl = document.getElementById('profileViewEmail');
+  if (emailEl) emailEl.textContent = currentAdvertiser.email || 'advertiser@brand.com';
+
+  const compEl = document.getElementById('profileViewCompany');
+  if (compEl) compEl.textContent = currentAdvertiser.company_name || name;
+
+  const idEl = document.getElementById('profileViewUserId');
+  if (idEl) idEl.textContent = currentAdvertiser.id || 'usr_client_1';
+
+  const phoneInput = document.getElementById('advProfilePhone');
+  if (phoneInput) phoneInput.value = currentAdvertiser.phone || '';
+
+  const pwdInput = document.getElementById('advProfilePassword');
+  if (pwdInput) pwdInput.value = '';
+
+  const modal = document.getElementById('advProfileModal');
+  if (modal) modal.style.display = 'flex';
 }
 
 function closeAdvUserProfileModal() {
-  document.getElementById('advProfileModal').style.display = 'none';
+  const modal = document.getElementById('advProfileModal');
+  if (modal) modal.style.display = 'none';
 }
 
 async function handleAdvSaveProfile(e) {
   e.preventDefault();
-  if (!currentAdvertiser) return;
+  if (!currentAdvertiser) openAdvUserProfileModal();
 
-  const phone = document.getElementById('advProfilePhone').value.trim();
-  const password = document.getElementById('advProfilePassword').value.trim();
+  const phoneInput = document.getElementById('advProfilePhone');
+  const passwordInput = document.getElementById('advProfilePassword');
+  const phone = phoneInput ? phoneInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
 
   const btn = document.getElementById('btnSaveAdvProfile');
-  const origText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Saving to Convex...';
+  const origText = btn ? btn.textContent : 'Save Changes';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saving to Convex...';
+  }
 
   try {
     const payload = {
-      user_id: currentAdvertiser.id,
+      user_id: currentAdvertiser.id || 'usr_client_1',
       phone
     };
     if (password) {
@@ -620,6 +656,7 @@ async function handleAdvSaveProfile(e) {
     if (res.ok) {
       currentAdvertiser.phone = phone;
       if (password) currentAdvertiser.password = password;
+      sessionStorage.setItem('tripcast_advertiser', JSON.stringify(currentAdvertiser));
       sessionStorage.setItem('tripcast_adv_user', JSON.stringify(currentAdvertiser));
       closeAdvUserProfileModal();
       alert('✅ Profile Secured!\n\nYour phone number and security credentials have been updated directly in Convex Cloud.');
@@ -630,8 +667,10 @@ async function handleAdvSaveProfile(e) {
     console.error('Error saving profile:', err);
     alert('Network error saving profile to cloud.');
   } finally {
-    btn.disabled = false;
-    btn.textContent = origText;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
   }
 }
 
