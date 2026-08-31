@@ -511,3 +511,75 @@ async function handleDriverSubmitTicket(e) {
   }
 }
 
+// ============================================================================
+// Driver Profile & Security Modal Handlers
+// ============================================================================
+
+function openDriverProfileModal() {
+  if (!currentDriver) return;
+
+  const initials = currentDriver.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'DR';
+  document.getElementById('modalDriverProfileAvatar').textContent = initials;
+  document.getElementById('modalDriverProfileName').textContent = currentDriver.full_name;
+
+  const veh = currentDriver.vehicle || {};
+  document.getElementById('profileDriverPlate').textContent = veh.license_plate || currentDriver.license_plate || 'LAG-492-AA';
+  document.getElementById('profileDriverCity').textContent = veh.city || currentDriver.city || 'Lagos Island';
+  document.getElementById('profileDriverBank').textContent = `${currentDriver.bank_name || 'Access Bank'} (${currentDriver.account_number || '0123456789'})`;
+  document.getElementById('profileDriverEmail').textContent = currentDriver.email || 'driver@tripcast.io';
+
+  document.getElementById('driverProfilePhone').value = currentDriver.phone || '';
+  document.getElementById('driverProfilePin').value = '';
+
+  document.getElementById('driverProfileModal').style.display = 'flex';
+}
+
+function closeDriverProfileModal() {
+  document.getElementById('driverProfileModal').style.display = 'none';
+}
+
+async function handleDriverSaveProfile(e) {
+  e.preventDefault();
+  if (!currentDriver) return;
+
+  const phone = document.getElementById('driverProfilePhone').value.trim();
+  const pin = document.getElementById('driverProfilePin').value.trim();
+
+  const btn = document.getElementById('btnSaveDriverProfile');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving to Convex...';
+
+  try {
+    const payload = {
+      user_id: currentDriver.id,
+      phone
+    };
+    if (pin) {
+      payload.password = pin;
+    }
+
+    const res = await fetch(`${API_BASE}/api/user/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      currentDriver.phone = phone;
+      if (pin) currentDriver.pin = pin;
+      sessionStorage.setItem('tripcast_driver_user', JSON.stringify(currentDriver));
+      closeDriverProfileModal();
+      alert('✅ Profile Secured!\n\nYour phone number and security PIN have been updated directly in Convex Cloud.');
+    } else {
+      alert('Failed to update driver profile.');
+    }
+  } catch (err) {
+    console.error('Error saving driver profile:', err);
+    alert('Network error saving profile to cloud.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+

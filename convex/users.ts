@@ -181,6 +181,8 @@ export const updateProfile = mutation({
     accountNumber: v.optional(v.string()),
     city: v.optional(v.string()),
     licensePlate: v.optional(v.string()),
+    password: v.optional(v.string()),
+    pin: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     let targetId = args.id;
@@ -204,6 +206,8 @@ export const updateProfile = mutation({
     if (args.accountNumber !== undefined) patch.account_number = args.accountNumber;
     if (args.city !== undefined) patch.city = args.city;
     if (args.licensePlate !== undefined) patch.license_plate = args.licensePlate;
+    if (args.password !== undefined) patch.password = args.password;
+    if (args.pin !== undefined) patch.pin = args.pin;
 
     await ctx.db.patch(targetId, patch);
     return { success: true, id: targetId };

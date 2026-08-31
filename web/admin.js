@@ -1002,5 +1002,61 @@ async function deleteAdminUser(userId, name) {
   }
 }
 
+// ============================================================================
+// Admin Self Profile & Security Modal Handlers
+// ============================================================================
+
+function openAdminSelfProfileModal() {
+  document.getElementById('profileAdminEmail').textContent = 'admin@tripcast.io';
+  document.getElementById('adminProfilePhone').value = '+234 801 000 0001';
+  document.getElementById('adminProfilePassword').value = '';
+  document.getElementById('adminSelfProfileModal').style.display = 'flex';
+}
+
+function closeAdminSelfProfileModal() {
+  document.getElementById('adminSelfProfileModal').style.display = 'none';
+}
+
+async function handleAdminSaveProfile(e) {
+  e.preventDefault();
+
+  const phone = document.getElementById('adminProfilePhone').value.trim();
+  const password = document.getElementById('adminProfilePassword').value.trim();
+
+  const btn = document.getElementById('btnSaveAdminProfile');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving to Convex...';
+
+  try {
+    const payload = {
+      user_id: 'usr_admin',
+      phone
+    };
+    if (password) {
+      payload.password = password;
+    }
+
+    const res = await fetch(`${API_BASE}/api/user/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      closeAdminSelfProfileModal();
+      alert('✅ Admin Credentials Secured!\n\nYour administrative phone and password have been saved directly to Convex Cloud.');
+    } else {
+      alert('Failed to update admin profile.');
+    }
+  } catch (err) {
+    console.error('Error saving admin profile:', err);
+    alert('Network error updating admin profile in cloud.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
 
 

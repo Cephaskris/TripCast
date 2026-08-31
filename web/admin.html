@@ -75,7 +75,7 @@
           <button class="icon-circle-btn" onclick="refreshAdminData()" title="Sync System Data">
             <span>🔄</span>
           </button>
-          <div class="user-avatar-pill" onclick="logoutAdmin()" title="Logout Admin">
+          <div class="user-avatar-pill" onclick="openAdminSelfProfileModal()" title="View & Edit Admin Profile" style="cursor: pointer;">
             <div class="avatar-circle">OP</div>
           </div>
         </div>
@@ -586,6 +586,89 @@
           <div class="modal-footer" style="margin-top: 20px;">
             <button type="button" class="btn btn-subtle" onclick="closeUserProfileModal()">Close Profile</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Admin Self User Profile & Security Modal -->
+      <div class="modal-overlay" id="adminSelfProfileModal">
+        <div class="modal-card" style="width: 540px;">
+          <div class="modal-header" style="align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="avatar-circle" id="modalAdminProfileAvatar" style="width: 44px; height: 44px; font-size: 16px; background: #1E1E22; color: #fff;">
+                OP
+              </div>
+              <div>
+                <h3 style="margin: 0; font-size: 18px;" id="modalAdminProfileName">Platform Operations Admin</h3>
+                <span class="status-pill active" style="font-size: 11px; margin-top: 4px; display: inline-block;">🛡️ Operations Administrator</span>
+              </div>
+            </div>
+            <button class="modal-close-circle" onclick="closeAdminSelfProfileModal()">&times;</button>
+          </div>
+
+          <form id="adminSelfProfileForm" onsubmit="handleAdminSaveProfile(event)">
+            <!-- View-Only Details Box -->
+            <div style="background: #FAF8F4; border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.06);">
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent-gray-text); margin-bottom: 10px; letter-spacing: 0.5px;">
+                Platform Administrative Account (Read-Only)
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                <div>
+                  <small style="color: var(--accent-gray-text); display: block; font-size: 10px; text-transform: uppercase; font-weight: 700;">Account Email</small>
+                  <span id="profileAdminEmail" style="font-weight: 600; color: var(--accent-black);">admin@tripcast.io</span>
+                </div>
+                <div>
+                  <small style="color: var(--accent-gray-text); display: block; font-size: 10px; text-transform: uppercase; font-weight: 700;">Access Scope</small>
+                  <span style="font-weight: 600; color: var(--accent-black);">Platform Central Root</span>
+                </div>
+                <div>
+                  <small style="color: var(--accent-gray-text); display: block; font-size: 10px; text-transform: uppercase; font-weight: 700;">Account ID</small>
+                  <code style="font-size: 11px; color: #7C3AED;">usr_admin</code>
+                </div>
+                <div>
+                  <small style="color: var(--accent-gray-text); display: block; font-size: 10px; text-transform: uppercase; font-weight: 700;">System Authority</small>
+                  <span class="status-pill active" style="font-size: 10px;">• SUPER ADMIN</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Editable Fields Box -->
+            <div style="margin-bottom: 22px;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--accent-black); margin-bottom: 6px;">
+                Editable Profile Information
+              </div>
+              <p style="font-size: 11px; color: var(--accent-gray-text); margin-bottom: 14px; line-height: 1.4;">
+                For platform security, only your <strong>Phone Number</strong> and <strong>Password</strong> can be modified.
+              </p>
+
+              <div class="form-group" style="margin-bottom: 14px;">
+                <label for="adminProfilePhone" style="font-size: 12px; font-weight: 700; margin-bottom: 6px; display: block;">
+                  📞 Nigerian Phone Number
+                </label>
+                <input type="tel" id="adminProfilePhone" class="form-input" required placeholder="+234 800 000 0000" style="font-weight: 600;">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 6px;">
+                <label for="adminProfilePassword" style="font-size: 12px; font-weight: 700; margin-bottom: 6px; display: block;">
+                  🔒 Security Password
+                </label>
+                <input type="text" id="adminProfilePassword" class="form-input" placeholder="Leave unchanged or enter new admin password..." style="font-weight: 600;">
+                <small style="color: var(--accent-gray-text); font-size: 11px; display: block; margin-top: 4px;">Leave blank if you do not wish to change your password.</small>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 18px;">
+              <button type="button" class="btn btn-subtle btn-sm" onclick="logoutAdmin()" style="color: #DC2626; border-color: rgba(220, 38, 38, 0.2); display: flex; align-items: center; gap: 6px;">
+                <span>🚪</span> Log Out
+              </button>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-subtle btn-sm" onclick="closeAdminSelfProfileModal()">Cancel</button>
+                <button type="submit" class="btn btn-dark btn-sm" id="btnSaveAdminProfile" style="min-width: 140px;">
+                  💾 Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
 

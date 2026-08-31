@@ -566,3 +566,72 @@ async function deleteAdvCampaign(campaignId, title) {
   }
 }
 
+// ============================================================================
+// User Profile & Security Modal Handlers
+// ============================================================================
+
+function openAdvUserProfileModal() {
+  if (!currentAdvertiser) return;
+
+  const initials = currentAdvertiser.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AD';
+  document.getElementById('modalProfileAvatar').textContent = initials;
+  document.getElementById('modalProfileName').textContent = currentAdvertiser.full_name;
+  document.getElementById('profileViewEmail').textContent = currentAdvertiser.email;
+  document.getElementById('profileViewCompany').textContent = currentAdvertiser.company_name || 'Brand Enterprise';
+  document.getElementById('profileViewUserId').textContent = currentAdvertiser.id;
+
+  document.getElementById('advProfilePhone').value = currentAdvertiser.phone || '';
+  document.getElementById('advProfilePassword').value = '';
+
+  document.getElementById('advProfileModal').style.display = 'flex';
+}
+
+function closeAdvUserProfileModal() {
+  document.getElementById('advProfileModal').style.display = 'none';
+}
+
+async function handleAdvSaveProfile(e) {
+  e.preventDefault();
+  if (!currentAdvertiser) return;
+
+  const phone = document.getElementById('advProfilePhone').value.trim();
+  const password = document.getElementById('advProfilePassword').value.trim();
+
+  const btn = document.getElementById('btnSaveAdvProfile');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving to Convex...';
+
+  try {
+    const payload = {
+      user_id: currentAdvertiser.id,
+      phone
+    };
+    if (password) {
+      payload.password = password;
+    }
+
+    const res = await fetch(`${API_BASE}/api/user/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      currentAdvertiser.phone = phone;
+      if (password) currentAdvertiser.password = password;
+      sessionStorage.setItem('tripcast_adv_user', JSON.stringify(currentAdvertiser));
+      closeAdvUserProfileModal();
+      alert('✅ Profile Secured!\n\nYour phone number and security credentials have been updated directly in Convex Cloud.');
+    } else {
+      alert('Failed to update profile.');
+    }
+  } catch (err) {
+    console.error('Error saving profile:', err);
+    alert('Network error saving profile to cloud.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+

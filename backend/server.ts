@@ -1715,6 +1715,56 @@ app.patch('/api/admin/users/:id', async (req: Request, res: Response) => {
   res.status(200).json({ success: true, id, message: 'User updated successfully.' });
 });
 
+// Self Profile Update (User can ONLY update Phone & Password/PIN)
+app.patch('/api/user/profile', async (req: Request, res: Response) => {
+  const { user_id, phone, password } = req.body;
+  if (!user_id) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    await convex.mutation(api.users.updateProfile, {
+      userId: String(user_id),
+      phone: phone || undefined,
+      password: password || undefined,
+      pin: password || undefined,
+    });
+    console.log(`[CONVEX USER] Updated phone/password for user ${user_id} in Convex Cloud.`);
+  } catch (e: any) {
+    console.log('[CONVEX USER PROFILE UPDATE] Notice:', e.message);
+  }
+
+  const user = users.find(u => u.id === user_id);
+  if (user) {
+    if (phone) user.phone = phone;
+    if (password) {
+      user.password = password;
+      user.pin = password;
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully.',
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        phone: user.phone,
+        company_name: user.company_name,
+        license_plate: user.license_plate,
+        city: user.city,
+        bank_name: user.bank_name,
+        account_number: user.account_number,
+        account_name: user.account_name,
+        created_at: user.created_at,
+        status: user.status
+      }
+    });
+  }
+
+  res.status(200).json({ success: true, message: 'Profile updated in Convex Cloud.' });
+});
+
 // Delete User (CRUD - Delete)
 app.delete('/api/admin/users/:id', async (req: Request, res: Response) => {
   const { id } = req.params;

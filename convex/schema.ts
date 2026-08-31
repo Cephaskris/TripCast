@@ -11,6 +11,7 @@ export default defineSchema({
     company_name: v.optional(v.string()),
     staff_id: v.optional(v.string()),
     password: v.optional(v.string()),
+    pin: v.optional(v.string()),
     city: v.optional(v.string()),
     license_plate: v.optional(v.string()),
     bank_name: v.optional(v.string()),
