@@ -10,6 +10,12 @@ export default defineSchema({
     phone: v.optional(v.string()),
     company_name: v.optional(v.string()),
     staff_id: v.optional(v.string()),
+    password: v.optional(v.string()),
+    city: v.optional(v.string()),
+    license_plate: v.optional(v.string()),
+    bank_name: v.optional(v.string()),
+    account_number: v.optional(v.string()),
+    account_name: v.optional(v.string()),
     created_at: v.string(),
     status: v.string(), // "ACTIVE" | "PENDING" | "SUSPENDED"
   })

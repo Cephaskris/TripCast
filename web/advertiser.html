@@ -12,27 +12,70 @@
 <body>
   <div class="canvas-wrapper">
 
-    <!-- 1. Dedicated Advertiser Login Screen -->
+    <!-- 1. Dedicated Advertiser Login & Registration Screen -->
     <div id="loginSection" class="auth-wrapper" style="display: none;">
-      <div class="auth-card">
-        <div class="brand-pill" style="margin-bottom: 24px; display: inline-flex;">
+      <div class="auth-card" style="max-width: 480px;">
+        <div class="brand-pill" style="margin-bottom: 20px; display: inline-flex;">
           <span class="brand-dot"></span>
           <span class="brand-name">TripCast</span>
+          <span class="badge-role">Advertiser Hub</span>
         </div>
-        <h2 class="auth-title">Advertiser Portal</h2>
-        <p class="auth-subtitle">Sign in to manage in-transit DOOH video campaigns across Nigerian fleets.</p>
 
-        <form id="advertiserLoginForm" onsubmit="handleAdvertiserLogin(event)">
-          <div class="form-group">
-            <label>Advertiser Email</label>
-            <input type="email" id="loginEmail" class="form-input" value="advertiser@brand.com" placeholder="name@company.com" required>
-          </div>
-          <div class="form-group">
-            <label>Access Key / Password</label>
-            <input type="password" id="loginPin" class="form-input" value="pass123" placeholder="••••••••" required>
-          </div>
-          <button type="submit" class="btn btn-dark btn-block" style="margin-top: 10px;">Sign In to Dashboard</button>
-        </form>
+        <!-- Auth Mode Toggle -->
+        <div class="auth-toggle-group">
+          <button type="button" id="tabBtnSignIn" class="auth-toggle-btn active" onclick="switchAdvAuthTab('SIGN_IN')">Sign In</button>
+          <button type="button" id="tabBtnSignUp" class="auth-toggle-btn" onclick="switchAdvAuthTab('SIGN_UP')">Create Brand Account</button>
+        </div>
+
+        <!-- Mode 1: Sign In -->
+        <div id="advSignInView">
+          <h2 class="auth-title">Welcome Back</h2>
+          <p class="auth-subtitle">Sign in to manage live in-transit video campaigns across Nigerian commercial fleets.</p>
+
+          <form id="advertiserLoginForm" onsubmit="handleAdvertiserLogin(event)">
+            <div class="form-group">
+              <label>Advertiser Email</label>
+              <input type="email" id="loginEmail" class="form-input" value="advertiser@brand.com" placeholder="name@company.com" required>
+            </div>
+            <div class="form-group">
+              <label>Password / Access Key</label>
+              <input type="password" id="loginPin" class="form-input" value="pass123" placeholder="••••••••" required>
+            </div>
+            <button type="submit" id="btnAdvLoginSubmit" class="btn btn-dark btn-block" style="margin-top: 12px;">Sign In to Dashboard ↗</button>
+          </form>
+        </div>
+
+        <!-- Mode 2: Create Account -->
+        <div id="advSignUpView" style="display: none;">
+          <h2 class="auth-title">Register Your Brand</h2>
+          <p class="auth-subtitle">Create a brand account to book and run GPS-verified DOOH video ads across Nigeria.</p>
+
+          <form id="advertiserRegisterForm" onsubmit="handleAdvertiserRegister(event)">
+            <div class="form-group">
+              <label>Company / Brand Name *</label>
+              <input type="text" id="regCompany" class="form-input" placeholder="e.g. Dangote Group, Flutterwave, Nike" required>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Contact Full Name *</label>
+                <input type="text" id="regFullName" class="form-input" placeholder="e.g. Chioma Adeleke" required>
+              </div>
+              <div class="form-group">
+                <label>Nigerian Phone *</label>
+                <input type="tel" id="regPhone" class="form-input" placeholder="+234 803 123 4567" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Business Email Address *</label>
+              <input type="email" id="regEmail" class="form-input" placeholder="marketing@company.ng" required>
+            </div>
+            <div class="form-group">
+              <label>Create Password *</label>
+              <input type="password" id="regPassword" class="form-input" placeholder="•••••••• (Min 4 chars)" minlength="4" required>
+            </div>
+            <button type="submit" id="btnAdvRegSubmit" class="btn btn-dark btn-block" style="margin-top: 12px; background: var(--accent-black);">Register Brand & Launch ↗</button>
+          </form>
+        </div>
 
         <div class="auth-footer">
           <span>Are you a driver? <a href="/driver">Driver Portal</a> • <a href="/admin">Admin Console</a></span>

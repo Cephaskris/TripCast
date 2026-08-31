@@ -12,28 +12,111 @@
 <body>
   <div class="canvas-wrapper">
 
-    <!-- 1. Dedicated Driver Login Screen -->
+    <!-- 1. Dedicated Driver Login & Registration Screen -->
     <div id="loginSection" class="auth-wrapper" style="display: none;">
-      <div class="auth-card">
-        <div class="brand-pill" style="margin-bottom: 24px; display: inline-flex;">
+      <div class="auth-card" style="max-width: 520px;">
+        <div class="brand-pill" style="margin-bottom: 20px; display: inline-flex;">
           <span class="brand-dot"></span>
           <span class="brand-name">TripCast</span>
           <span class="badge-role">Driver Hub</span>
         </div>
-        <h2 class="auth-title">Driver Shift Login</h2>
-        <p class="auth-subtitle">Sign in with your driver credentials or PIN to launch in-transit Cast Mode and track your daily earnings.</p>
 
-        <form id="driverLoginForm" onsubmit="handleDriverLogin(event)">
-          <div class="form-group">
-            <label>Driver Email or Phone</label>
-            <input type="text" id="driverEmail" class="form-input" value="emeka.driver@tripcast.io" placeholder="emeka@driver.com" required>
-          </div>
-          <div class="form-group">
-            <label>Driver Security PIN</label>
-            <input type="password" id="driverPin" class="form-input" value="1234" placeholder="••••" required>
-          </div>
-          <button type="submit" class="btn btn-dark btn-block" style="margin-top: 10px;">Sign In & Open Shift</button>
-        </form>
+        <!-- Auth Mode Toggle -->
+        <div class="auth-toggle-group">
+          <button type="button" id="driverTabSignIn" class="auth-toggle-btn active" onclick="switchDriverAuthTab('SIGN_IN')">Driver Sign In</button>
+          <button type="button" id="driverTabSignUp" class="auth-toggle-btn" onclick="switchDriverAuthTab('SIGN_UP')">Register Driver & Vehicle</button>
+        </div>
+
+        <!-- Mode 1: Sign In -->
+        <div id="driverSignInView">
+          <h2 class="auth-title">Driver Shift Login</h2>
+          <p class="auth-subtitle">Sign in with your driver credentials or PIN to launch in-transit Cast Mode and track your daily earnings in Naira.</p>
+
+          <form id="driverLoginForm" onsubmit="handleDriverLogin(event)">
+            <div class="form-group">
+              <label>Driver Email or Phone</label>
+              <input type="text" id="driverEmail" class="form-input" value="emeka.driver@tripcast.io" placeholder="emeka@driver.com" required>
+            </div>
+            <div class="form-group">
+              <label>Driver Security PIN / Password</label>
+              <input type="password" id="driverPin" class="form-input" value="1234" placeholder="••••" required>
+            </div>
+            <button type="submit" id="btnDriverLoginSubmit" class="btn btn-dark btn-block" style="margin-top: 12px;">Sign In & Open Shift ↗</button>
+          </form>
+        </div>
+
+        <!-- Mode 2: Register Driver & Vehicle -->
+        <div id="driverSignUpView" style="display: none;">
+          <h2 class="auth-title">Join Fleet as a Driver</h2>
+          <p class="auth-subtitle">Register your vehicle to stream verified ads, earn ₦10.00/play, and receive automated NIBSS bank payouts.</p>
+
+          <form id="driverRegisterForm" onsubmit="handleDriverRegister(event)">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Full Legal Name *</label>
+                <input type="text" id="regDriverName" class="form-input" placeholder="e.g. Babatunde Lawal" required>
+              </div>
+              <div class="form-group">
+                <label>Phone Number *</label>
+                <input type="tel" id="regDriverPhone" class="form-input" placeholder="+234 802 123 4567" required>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" id="regDriverEmail" class="form-input" placeholder="driver@gmail.com" required>
+              </div>
+              <div class="form-group">
+                <label>Security PIN / Password *</label>
+                <input type="password" id="regDriverPin" class="form-input" placeholder="4-digit PIN" minlength="4" required>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Vehicle License Plate *</label>
+                <input type="text" id="regDriverPlate" class="form-input" placeholder="e.g. LAG-492-AA" style="text-transform: uppercase;" required>
+              </div>
+              <div class="form-group">
+                <label>Operating City / Route *</label>
+                <select id="regDriverCity" class="form-input" required>
+                  <option value="Lagos Island">Lagos Island (VI, Ikoyi, Marina)</option>
+                  <option value="Ikeja">Ikeja / Mainland Corridor</option>
+                  <option value="Lekki Phase 1">Lekki - Epe Expressway</option>
+                  <option value="Abuja Central">Abuja FCT / Wuse / Maitama</option>
+                  <option value="Port Harcourt">Port Harcourt GRA</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Settlement Bank Information -->
+            <div style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;">
+              <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--accent-black); display: block; margin-bottom: 8px;">🏦 Monthly Payout Bank Details (NIBSS)</span>
+              <div class="form-row-2">
+                <div class="form-group" style="margin-bottom: 8px;">
+                  <label>Select Bank *</label>
+                  <select id="regDriverBank" class="form-input" required>
+                    <option value="Access Bank">Access Bank</option>
+                    <option value="GTBank">Guaranty Trust Bank (GTBank)</option>
+                    <option value="Zenith Bank">Zenith Bank</option>
+                    <option value="First Bank">First Bank of Nigeria</option>
+                    <option value="UBA">United Bank for Africa (UBA)</option>
+                    <option value="Kuda Bank">Kuda Microfinance Bank</option>
+                    <option value="OPay">OPay Digital Services</option>
+                    <option value="PalmPay">PalmPay Nigeria</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                  <label>10-Digit Account Number *</label>
+                  <input type="text" id="regDriverAccountNum" class="form-input" placeholder="0123456789" maxlength="10" pattern="\d{10}" required>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" id="btnDriverRegSubmit" class="btn btn-dark btn-block" style="margin-top: 10px;">Register Vehicle & Launch Shift ↗</button>
+          </form>
+        </div>
 
         <div class="auth-footer">
           <span>Are you an advertiser? <a href="/advertiser">Advertiser Portal</a> • <a href="/admin">Admin Console</a></span>

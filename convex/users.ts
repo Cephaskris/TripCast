@@ -1,4 +1,4 @@
-import { query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const list = query({
@@ -85,3 +85,80 @@ export const getProfile = query({
     return { user };
   },
 });
+
+export const register = mutation({
+  args: {
+    email: v.string(),
+    fullName: v.string(),
+    role: v.union(v.literal("CLIENT"), v.literal("DRIVER")),
+    phone: v.string(),
+    password: v.string(),
+    companyName: v.optional(v.string()),
+    licensePlate: v.optional(v.string()),
+    city: v.optional(v.string()),
+    bankName: v.optional(v.string()),
+    accountNumber: v.optional(v.string()),
+    accountName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (existing) {
+      throw new Error("This email is already registered.");
+    }
+
+    const userId = args.role === "CLIENT" 
+      ? `usr_client_${Date.now()}` 
+      : `usr_driver_${Date.now()}`;
+    const now = new Date().toISOString();
+
+    await ctx.db.insert("users", {
+      userId,
+      email: args.email,
+      full_name: args.fullName,
+      role: args.role,
+      phone: args.phone,
+      company_name: args.companyName,
+      password: args.password,
+      city: args.city,
+      license_plate: args.licensePlate,
+      bank_name: args.bankName,
+      account_number: args.accountNumber,
+      account_name: args.accountName,
+      created_at: now,
+      status: "ACTIVE",
+    });
+
+    if (args.role === "DRIVER") {
+      const vehicleId = `veh_${Date.now()}`;
+      const cleanCity = (args.city || "lagos").toLowerCase().replace(/[^a-z0-9]/g, "_");
+      const tabletId = `tab_${cleanCity}_${Math.floor(100 + Math.random() * 900)}`;
+
+      await ctx.db.insert("vehicles", {
+        vehicle_id: vehicleId,
+        driver_id: userId,
+        driver_name: args.fullName,
+        tablet_device_id: tabletId,
+        license_plate: args.licensePlate || `LAG-${Math.floor(100 + Math.random() * 900)}-AA`,
+        city: args.city || "Lagos Island",
+        is_active: true,
+        app_version: "1.0.0 (SDK 54)",
+        battery_level: 96,
+        storage_free_mb: 14500,
+        last_heartbeat: now,
+      });
+    }
+
+    return {
+      success: true,
+      userId,
+      email: args.email,
+      fullName: args.fullName,
+      role: args.role,
+    };
+  },
+});
+

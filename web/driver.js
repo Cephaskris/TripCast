@@ -54,6 +54,25 @@ function showLogin() {
   document.getElementById('dashboardSection').style.display = 'none';
 }
 
+function switchDriverAuthTab(mode) {
+  const tabSignIn = document.getElementById('driverTabSignIn');
+  const tabSignUp = document.getElementById('driverTabSignUp');
+  const viewSignIn = document.getElementById('driverSignInView');
+  const viewSignUp = document.getElementById('driverSignUpView');
+
+  if (mode === 'SIGN_UP') {
+    tabSignIn.classList.remove('active');
+    tabSignUp.classList.add('active');
+    viewSignIn.style.display = 'none';
+    viewSignUp.style.display = 'block';
+  } else {
+    tabSignUp.classList.remove('active');
+    tabSignIn.classList.add('active');
+    viewSignUp.style.display = 'none';
+    viewSignIn.style.display = 'block';
+  }
+}
+
 function showDashboard() {
   document.getElementById('loginSection').style.display = 'none';
   document.getElementById('dashboardSection').style.display = 'block';
@@ -77,7 +96,7 @@ async function handleDriverLogin(e) {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, pin, role: 'DRIVER' })
+      body: JSON.stringify({ email, pin, password: pin, role: 'DRIVER' })
     });
 
     if (res.ok) {
@@ -86,10 +105,72 @@ async function handleDriverLogin(e) {
       sessionStorage.setItem('tripcast_driver', JSON.stringify(currentDriver));
       showDashboard();
     } else {
-      alert('❌ Invalid driver credentials. Demo account: emeka.driver@tripcast.io / PIN: 1234');
+      const errData = await res.json().catch(() => ({}));
+      alert(`❌ ${errData.error || 'Invalid driver credentials. Demo account: emeka.driver@tripcast.io / PIN: 1234'}`);
     }
   } catch (err) {
     console.error('Error driver login:', err);
+  }
+}
+
+async function handleDriverRegister(e) {
+  e.preventDefault();
+  const full_name = document.getElementById('regDriverName').value.trim();
+  const phone = document.getElementById('regDriverPhone').value.trim();
+  const email = document.getElementById('regDriverEmail').value.trim();
+  const password = document.getElementById('regDriverPin').value;
+  const license_plate = document.getElementById('regDriverPlate').value.trim().toUpperCase();
+  const city = document.getElementById('regDriverCity').value;
+  const bank_name = document.getElementById('regDriverBank').value;
+  const account_number = document.getElementById('regDriverAccountNum').value.trim();
+  const submitBtn = document.getElementById('btnDriverRegSubmit');
+
+  if (!full_name || !email || !password || !license_plate || !account_number) {
+    alert('Please fill out all required driver registration details.');
+    return;
+  }
+
+  if (account_number.length !== 10) {
+    alert('Nigerian NIBSS account numbers must be exactly 10 digits.');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Registering Vehicle & Driver...';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'DRIVER',
+        full_name,
+        email,
+        phone,
+        password,
+        license_plate,
+        city,
+        bank_name,
+        account_number,
+        account_name: full_name
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      currentDriver = data.user;
+      sessionStorage.setItem('tripcast_driver', JSON.stringify(currentDriver));
+      alert(`🎉 Welcome to the TripCast Fleet, ${full_name}!\nVehicle ${license_plate} assigned to tablet (${currentDriver.vehicle?.tablet_device_id || 'Active'}). Payouts linked to ${bank_name}.`);
+      showDashboard();
+    } else {
+      alert(`❌ Registration Failed: ${data.error || 'Please check your inputs.'}`);
+    }
+  } catch (err) {
+    console.error('Error in driver registration:', err);
+    alert('Network error during driver registration.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Register Vehicle & Launch Shift ↗';
   }
 }
 

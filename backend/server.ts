@@ -49,6 +49,12 @@ export interface User {
   status: 'ACTIVE' | 'PENDING' | 'SUSPENDED';
   staff_id?: string;
   company_name?: string;
+  password?: string;
+  city?: string;
+  license_plate?: string;
+  bank_name?: string;
+  account_number?: string;
+  account_name?: string;
 }
 
 export interface Campaign {
@@ -339,16 +345,18 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // Authentication Endpoint
 app.post('/api/auth/login', (req: Request, res: Response) => {
-  const { email, pin, role } = req.body;
+  const { email, pin, password, role } = req.body;
+  const pwd = pin || password;
 
   let user = users.find(u => {
     if (role && u.role !== role) return false;
-    if (email && (u.email.toLowerCase() === email.toLowerCase() || u.id === email)) return true;
-    if (pin && u.pin === pin) return true;
-    return false;
+    const matchEmail = email && (u.email.toLowerCase() === email.toLowerCase().trim() || u.id === email);
+    const matchPwd = !pwd || u.pin === pwd || u.password === pwd;
+    return matchEmail && matchPwd;
   });
 
-  if (!user && role) {
+  // Fallback to sample user if no credentials passed in demo
+  if (!user && role && !email && !pwd) {
     user = users.find(u => u.role === role);
   }
 
@@ -360,13 +368,146 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         full_name: user.full_name,
+        company_name: user.company_name,
+        phone: user.phone,
         role: user.role,
         vehicle: vehicle || null
       }
     });
   }
 
-  res.status(401).json({ success: false, error: 'Invalid credentials for requested role' });
+  res.status(401).json({ success: false, error: 'Invalid email, password, or security PIN.' });
+});
+
+// User Registration Endpoint (Advertisers & Drivers)
+app.post('/api/auth/register', (req: Request, res: Response) => {
+  const {
+    role,
+    email,
+    password,
+    full_name,
+    phone,
+    company_name,
+    // Driver fields
+    license_plate,
+    city,
+    bank_name,
+    account_number,
+    account_name
+  } = req.body;
+
+  if (!role || !['CLIENT', 'DRIVER'].includes(role)) {
+    return res.status(400).json({ error: 'Valid role (CLIENT or DRIVER) is required.' });
+  }
+
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ error: 'A valid email address is required.' });
+  }
+
+  if (!full_name || full_name.trim().length < 2) {
+    return res.status(400).json({ error: 'Full name is required.' });
+  }
+
+  if (!password || password.length < 3) {
+    return res.status(400).json({ error: 'Password or security PIN must be at least 3 characters.' });
+  }
+
+  if (role === 'CLIENT' && !company_name) {
+    return res.status(400).json({ error: 'Company or Brand Name is required for advertiser registration.' });
+  }
+
+  if (role === 'DRIVER') {
+    if (!license_plate) {
+      return res.status(400).json({ error: 'Vehicle license plate is required for driver registration.' });
+    }
+    if (!city) {
+      return res.status(400).json({ error: 'Operating city / route is required.' });
+    }
+  }
+
+  const cleanEmail = email.toLowerCase().trim();
+  const existingUser = users.find(u => u.email.toLowerCase() === cleanEmail);
+  if (existingUser) {
+    return res.status(400).json({ error: 'An account with this email address already exists. Please log in.' });
+  }
+
+  const userId = role === 'CLIENT' ? `usr_client_${Date.now()}` : `usr_driver_${Date.now()}`;
+  const now = new Date().toISOString();
+
+  const newUser: User = {
+    id: userId,
+    email: cleanEmail,
+    full_name: full_name.trim(),
+    role,
+    pin: password,
+    password,
+    phone: phone || '+234 800 000 0000',
+    company_name: company_name ? company_name.trim() : (role === 'CLIENT' ? full_name.trim() : undefined),
+    city: city ? city.trim() : undefined,
+    license_plate: license_plate ? license_plate.trim().toUpperCase() : undefined,
+    bank_name: bank_name ? bank_name.trim() : undefined,
+    account_number: account_number ? account_number.trim() : undefined,
+    account_name: account_name ? account_name.trim() : full_name.trim(),
+    created_at: now,
+    status: 'ACTIVE'
+  };
+
+  users.push(newUser);
+
+  let vehicleRecord: Vehicle | null = null;
+  if (role === 'DRIVER') {
+    const cleanCity = (city || 'lagos').toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const tabletId = `tab_${cleanCity}_${Math.floor(100 + Math.random() * 900)}`;
+
+    vehicleRecord = {
+      id: `veh_${Date.now()}`,
+      driver_id: userId,
+      driver_name: full_name.trim(),
+      tablet_device_id: tabletId,
+      license_plate: license_plate ? license_plate.trim().toUpperCase() : `LAG-${Math.floor(100 + Math.random() * 900)}-AA`,
+      city: city || 'Lagos Island',
+      is_active: true,
+      app_version: '1.0.0 (SDK 54)',
+      battery_level: 96,
+      storage_free_mb: 14500,
+      last_heartbeat: now
+    };
+    vehicles.push(vehicleRecord);
+  }
+
+  console.log(`[AUTH REGISTER] New ${role} registered: ${newUser.full_name} (${newUser.email}) - ID: ${newUser.id}`);
+
+  // Live Sync to Convex Cloud Database
+  try {
+    convex.mutation(api.users.register, {
+      email: newUser.email,
+      fullName: newUser.full_name,
+      role: newUser.role as 'CLIENT' | 'DRIVER',
+      phone: newUser.phone || '',
+      password: newUser.password || '',
+      companyName: newUser.company_name,
+      licensePlate: newUser.license_plate,
+      city: newUser.city,
+      bankName: newUser.bank_name,
+      accountNumber: newUser.account_number,
+      accountName: newUser.account_name,
+    }).then(r => console.log(`[CONVEX CLOUD] Stored new registered user in Convex: ${r.userId}`))
+      .catch(e => console.log('[CONVEX CLOUD] User registration notice:', e.message));
+  } catch (e) {}
+
+  res.status(201).json({
+    success: true,
+    message: `Account created successfully for ${newUser.full_name}.`,
+    user: {
+      id: newUser.id,
+      email: newUser.email,
+      full_name: newUser.full_name,
+      company_name: newUser.company_name,
+      phone: newUser.phone,
+      role: newUser.role,
+      vehicle: vehicleRecord
+    }
+  });
 });
 
 // ============================================================================
@@ -1165,7 +1306,12 @@ app.get('/api/admin/users', (req: Request, res: Response) => {
       created_at: u.created_at,
       status: u.status || 'ACTIVE',
       company_name: u.company_name,
-      staff_id: u.staff_id
+      staff_id: u.staff_id,
+      city: u.city,
+      license_plate: u.license_plate,
+      bank_name: u.bank_name,
+      account_number: u.account_number,
+      account_name: u.account_name
     };
 
     if (u.role === 'DRIVER') {
@@ -1180,16 +1326,19 @@ app.get('/api/admin/users', (req: Request, res: Response) => {
         ...base,
         driver_details: {
           vehicle_id: veh?.id || 'veh_unassigned',
-          license_plate: veh?.license_plate || 'LAG-492-AA',
+          license_plate: veh?.license_plate || u.license_plate || 'LAG-492-AA',
           tablet_device_id: veh?.tablet_device_id || 'tab_lagos_001',
-          city: veh?.city || 'Lagos Island',
+          city: veh?.city || u.city || 'Lagos Island',
           is_active: veh?.is_active ?? true,
           battery_level: veh?.battery_level ?? 94,
           total_hours_played: inTransitHours,
           total_verified_plays: verifiedPlays,
           total_earnings_naira: totalEarned,
           payout_status: recentPayout?.status || 'PENDING',
-          rate_per_play: `₦${platformRates.driver_payout_rate.toFixed(2)}`
+          rate_per_play: `₦${platformRates.driver_payout_rate.toFixed(2)}`,
+          bank_name: u.bank_name || 'GTBank',
+          account_number: u.account_number || '0123456789',
+          account_name: u.account_name || u.full_name
         }
       };
     } else if (u.role === 'CLIENT') {
@@ -1263,7 +1412,12 @@ app.get('/api/admin/users/:id', (req: Request, res: Response) => {
     created_at: user.created_at,
     status: user.status || 'ACTIVE',
     company_name: user.company_name,
-    staff_id: user.staff_id
+    staff_id: user.staff_id,
+    city: user.city,
+    license_plate: user.license_plate,
+    bank_name: user.bank_name,
+    account_number: user.account_number,
+    account_name: user.account_name
   };
 
   if (user.role === 'DRIVER') {
@@ -1278,6 +1432,11 @@ app.get('/api/admin/users/:id', (req: Request, res: Response) => {
       user: base,
       role: 'DRIVER',
       vehicle: veh || null,
+      bank_details: {
+        bank_name: user.bank_name || 'GTBank',
+        account_number: user.account_number || '0123456789',
+        account_name: user.account_name || user.full_name
+      },
       stats: {
         total_hours_in_transit: inTransitHours,
         total_verified_plays: verifiedPlays,

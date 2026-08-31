@@ -24,12 +24,32 @@ function showLogin() {
   document.getElementById('dashboardSection').style.display = 'none';
 }
 
+function switchAdvAuthTab(mode) {
+  const tabSignIn = document.getElementById('tabBtnSignIn');
+  const tabSignUp = document.getElementById('tabBtnSignUp');
+  const viewSignIn = document.getElementById('advSignInView');
+  const viewSignUp = document.getElementById('advSignUpView');
+
+  if (mode === 'SIGN_UP') {
+    tabSignIn.classList.remove('active');
+    tabSignUp.classList.add('active');
+    viewSignIn.style.display = 'none';
+    viewSignUp.style.display = 'block';
+  } else {
+    tabSignUp.classList.remove('active');
+    tabSignIn.classList.add('active');
+    viewSignUp.style.display = 'none';
+    viewSignIn.style.display = 'block';
+  }
+}
+
 function showDashboard() {
   document.getElementById('loginSection').style.display = 'none';
   document.getElementById('dashboardSection').style.display = 'block';
   if (currentAdvertiser) {
-    document.getElementById('advGreeting').textContent = `Hello ${currentAdvertiser.full_name}`;
-    document.getElementById('userAvatarInitials').textContent = currentAdvertiser.full_name.substring(0, 2).toUpperCase();
+    const brandDisplay = currentAdvertiser.company_name || currentAdvertiser.full_name;
+    document.getElementById('advGreeting').textContent = `Hello ${brandDisplay}`;
+    document.getElementById('userAvatarInitials').textContent = brandDisplay.substring(0, 2).toUpperCase();
   }
   refreshAdvertiserData();
 }
@@ -43,7 +63,7 @@ async function handleAdvertiserLogin(e) {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, pin, role: 'CLIENT' })
+      body: JSON.stringify({ email, pin, password: pin, role: 'CLIENT' })
     });
 
     if (res.ok) {
@@ -52,10 +72,60 @@ async function handleAdvertiserLogin(e) {
       sessionStorage.setItem('tripcast_advertiser', JSON.stringify(currentAdvertiser));
       showDashboard();
     } else {
-      alert('❌ Invalid advertiser credentials. Please use demo credentials (advertiser@brand.com / pass123).');
+      const errData = await res.json().catch(() => ({}));
+      alert(`❌ ${errData.error || 'Invalid credentials. Please verify your email and password.'}`);
     }
   } catch (err) {
     console.error('Error logging in:', err);
+  }
+}
+
+async function handleAdvertiserRegister(e) {
+  e.preventDefault();
+  const company_name = document.getElementById('regCompany').value.trim();
+  const full_name = document.getElementById('regFullName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const submitBtn = document.getElementById('btnAdvRegSubmit');
+
+  if (!company_name || !full_name || !email || !password) {
+    alert('Please complete all required fields.');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Registering Brand...';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'CLIENT',
+        company_name,
+        full_name,
+        phone,
+        email,
+        password
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      currentAdvertiser = data.user;
+      sessionStorage.setItem('tripcast_advertiser', JSON.stringify(currentAdvertiser));
+      alert(`🎉 Welcome to TripCast, ${company_name}! Your brand account has been created and verified.`);
+      showDashboard();
+    } else {
+      alert(`❌ Registration Failed: ${data.error || 'Please check your information.'}`);
+    }
+  } catch (err) {
+    console.error('Error during registration:', err);
+    alert('Network error occurred during registration.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Register Brand & Launch ↗';
   }
 }
 

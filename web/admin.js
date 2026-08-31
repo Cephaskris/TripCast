@@ -873,6 +873,14 @@ async function openUserProfileModal(userId) {
           </div>
         </div>
 
+        <div style="background: #FFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;">
+          <small style="color: var(--accent-gray-text); font-weight: 700; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 6px;">🏦 NIBSS Bank Account & Transit Zone</small>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--accent-black);">
+            <span>${data.bank_details?.bank_name || u.bank_name || 'GTBank'} • <strong>${data.bank_details?.account_number || u.account_number || '0123456789'}</strong></span>
+            <span>📍 ${v?.city || u.city || 'Lagos Island'}</span>
+          </div>
+        </div>
+
         <h5 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: var(--accent-black);">Driver Earnings & Shift Performance</h5>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
           <div style="background: #FAF8F4; border-radius: 12px; padding: 12px; text-align: center;">
@@ -893,6 +901,11 @@ async function openUserProfileModal(userId) {
       const s = data.stats;
       const camps = data.campaigns || [];
       bodyHtml += `
+        <div style="background: #FFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;">
+          <small style="color: var(--accent-gray-text); font-weight: 700; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 4px;">🏢 Brand / Organization Entity</small>
+          <div style="font-size: 14px; font-weight: 800; color: var(--accent-black);">${u.company_name || u.full_name}</div>
+        </div>
+
         <h5 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: var(--accent-black);">Advertiser Financial Overview</h5>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
           <div style="background: #FAF8F4; border-radius: 12px; padding: 12px; text-align: center;">
