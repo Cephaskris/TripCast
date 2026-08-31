@@ -1,4 +1,6 @@
-const API_BASE = window.location.origin;
+const API_BASE = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) 
+  ? window.location.origin 
+  : 'http://localhost:8080';
 
 let currentAgent = null;
 let allTickets = [];
@@ -10,9 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkAuth() {
-  const saved = sessionStorage.getItem('tripcast_support');
+  const saved = sessionStorage.getItem('tripcast_support') || sessionStorage.getItem('tripcast_support_user');
   if (saved) {
-    currentAgent = JSON.parse(saved);
+    try {
+      currentAgent = JSON.parse(saved);
+    } catch (e) {
+      currentAgent = null;
+    }
+  }
+
+  if (currentAgent) {
     showDashboard();
   } else {
     showLogin();
@@ -20,16 +29,25 @@ function checkAuth() {
 }
 
 function showLogin() {
-  document.getElementById('loginSection').style.display = 'flex';
-  document.getElementById('dashboardSection').style.display = 'none';
+  closeSupportProfileModal();
+  closeTicketModal();
+  const loginSec = document.getElementById('loginSection');
+  const dashSec = document.getElementById('dashboardSection');
+  if (loginSec) loginSec.style.display = 'flex';
+  if (dashSec) dashSec.style.display = 'none';
 }
 
 function showDashboard() {
-  document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('dashboardSection').style.display = 'block';
+  const loginSec = document.getElementById('loginSection');
+  const dashSec = document.getElementById('dashboardSection');
+  if (loginSec) loginSec.style.display = 'none';
+  if (dashSec) dashSec.style.display = 'block';
   if (currentAgent) {
-    document.getElementById('supportGreeting').textContent = `Hello ${currentAgent.full_name}`;
-    document.getElementById('agentInitials').textContent = currentAgent.full_name.substring(0, 2).toUpperCase();
+    const name = currentAgent.full_name || 'Customer Care Agent';
+    const greetEl = document.getElementById('supportGreeting');
+    if (greetEl) greetEl.textContent = `Hello ${name}`;
+    const initialsEl = document.getElementById('agentInitials');
+    if (initialsEl) initialsEl.textContent = name.substring(0, 2).toUpperCase();
   }
   refreshSupportData();
 }
@@ -60,7 +78,10 @@ async function handleSupportLogin(e) {
 }
 
 function logoutSupport() {
+  closeSupportProfileModal();
+  closeTicketModal();
   sessionStorage.removeItem('tripcast_support');
+  sessionStorage.removeItem('tripcast_support_user');
   currentAgent = null;
   showLogin();
 }
@@ -257,30 +278,73 @@ async function handleResolveTicket(e) {
 // ============================================================================
 
 function openSupportProfileModal() {
-  document.getElementById('profileSupportEmail').textContent = currentSupportUser?.email || 'support@tripcast.io';
-  document.getElementById('supportProfilePhone').value = currentSupportUser?.phone || '+234 809 555 6677';
-  document.getElementById('supportProfilePassword').value = '';
-  document.getElementById('supportProfileModal').style.display = 'flex';
+  if (!currentAgent) {
+    const saved = sessionStorage.getItem('tripcast_support') || sessionStorage.getItem('tripcast_support_user');
+    if (saved) {
+      try { currentAgent = JSON.parse(saved); } catch (e) {}
+    }
+  }
+
+  if (!currentAgent) {
+    currentAgent = {
+      id: 'usr_agent_01',
+      full_name: 'Amaka Madu',
+      email: 'support@tripcast.io',
+      staff_id: 'TC-SUP-081',
+      phone: '+234 809 111 2233',
+      role: 'SUPPORT'
+    };
+  }
+
+  const name = currentAgent.full_name || 'Customer Care Agent';
+  const initials = name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AM';
+
+  const avatarEl = document.getElementById('modalSupportAvatar');
+  if (avatarEl) avatarEl.textContent = initials;
+
+  const nameEl = document.getElementById('modalSupportName');
+  if (nameEl) nameEl.textContent = name;
+
+  const emailEl = document.getElementById('profileSupportEmail');
+  if (emailEl) emailEl.textContent = currentAgent.email || 'support@tripcast.io';
+
+  const staffEl = document.getElementById('profileSupportStaffId');
+  if (staffEl) staffEl.textContent = currentAgent.staff_id || 'TC-SUP-081';
+
+  const phoneInput = document.getElementById('supportProfilePhone');
+  if (phoneInput) phoneInput.value = currentAgent.phone || '+234 809 111 2233';
+
+  const pwdInput = document.getElementById('supportProfilePassword');
+  if (pwdInput) pwdInput.value = '';
+
+  const modal = document.getElementById('supportProfileModal');
+  if (modal) modal.style.display = 'flex';
 }
 
 function closeSupportProfileModal() {
-  document.getElementById('supportProfileModal').style.display = 'none';
+  const modal = document.getElementById('supportProfileModal');
+  if (modal) modal.style.display = 'none';
 }
 
 async function handleSupportSaveProfile(e) {
   e.preventDefault();
+  if (!currentAgent) openSupportProfileModal();
 
-  const phone = document.getElementById('supportProfilePhone').value.trim();
-  const password = document.getElementById('supportProfilePassword').value.trim();
+  const phoneInput = document.getElementById('supportProfilePhone');
+  const passwordInput = document.getElementById('supportProfilePassword');
+  const phone = phoneInput ? phoneInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
 
   const btn = document.getElementById('btnSaveSupportProfile');
-  const origText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Saving to Convex...';
+  const origText = btn ? btn.textContent : 'Save Changes';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saving to Convex...';
+  }
 
   try {
     const payload = {
-      user_id: currentSupportUser?.id || 'usr_support_1',
+      user_id: currentAgent.id || 'usr_agent_01',
       phone
     };
     if (password) {
@@ -294,6 +358,9 @@ async function handleSupportSaveProfile(e) {
     });
 
     if (res.ok) {
+      currentAgent.phone = phone;
+      sessionStorage.setItem('tripcast_support', JSON.stringify(currentAgent));
+      sessionStorage.setItem('tripcast_support_user', JSON.stringify(currentAgent));
       closeSupportProfileModal();
       alert('✅ Staff Credentials Secured!\n\nYour phone number and access key have been updated directly in Convex Cloud.');
     } else {
@@ -303,7 +370,9 @@ async function handleSupportSaveProfile(e) {
     console.error('Error saving support profile:', err);
     alert('Network error saving profile to cloud.');
   } finally {
-    btn.disabled = false;
-    btn.textContent = origText;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
   }
 }

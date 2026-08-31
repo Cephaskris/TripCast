@@ -1,4 +1,6 @@
-const API_BASE = window.location.origin;
+const API_BASE = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) 
+  ? window.location.origin 
+  : 'http://localhost:8080';
 
 let currentDriver = null;
 let isCasting = false;
@@ -40,9 +42,16 @@ async function fetchDriverRate() {
 }
 
 function checkAuth() {
-  const saved = sessionStorage.getItem('tripcast_driver');
+  const saved = sessionStorage.getItem('tripcast_driver') || sessionStorage.getItem('tripcast_driver_user');
   if (saved) {
-    currentDriver = JSON.parse(saved);
+    try {
+      currentDriver = JSON.parse(saved);
+    } catch (e) {
+      currentDriver = null;
+    }
+  }
+
+  if (currentDriver) {
     showDashboard();
   } else {
     showLogin();
@@ -50,8 +59,11 @@ function checkAuth() {
 }
 
 function showLogin() {
-  document.getElementById('loginSection').style.display = 'flex';
-  document.getElementById('dashboardSection').style.display = 'none';
+  closeDriverProfileModal();
+  const loginSec = document.getElementById('loginSection');
+  const dashSec = document.getElementById('dashboardSection');
+  if (loginSec) loginSec.style.display = 'flex';
+  if (dashSec) dashSec.style.display = 'none';
 }
 
 function switchDriverAuthTab(mode) {
@@ -74,14 +86,21 @@ function switchDriverAuthTab(mode) {
 }
 
 function showDashboard() {
-  document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('dashboardSection').style.display = 'block';
+  const loginSec = document.getElementById('loginSection');
+  const dashSec = document.getElementById('dashboardSection');
+  if (loginSec) loginSec.style.display = 'none';
+  if (dashSec) dashSec.style.display = 'block';
   if (currentDriver) {
-    document.getElementById('driverGreeting').textContent = `Hello ${currentDriver.full_name}`;
-    document.getElementById('driverInitials').textContent = currentDriver.full_name.substring(0, 2).toUpperCase();
+    const name = currentDriver.full_name || 'Transit Driver';
+    const greetEl = document.getElementById('driverGreeting');
+    if (greetEl) greetEl.textContent = `Hello ${name}`;
+    const initialsEl = document.getElementById('driverInitials');
+    if (initialsEl) initialsEl.textContent = name.substring(0, 2).toUpperCase();
     if (currentDriver.vehicle) {
-      document.getElementById('vehiclePlateBadge').textContent = currentDriver.vehicle.license_plate;
-      document.getElementById('driverBattery').textContent = `${currentDriver.vehicle.battery_level}% 🔋`;
+      const plateEl = document.getElementById('vehiclePlateBadge');
+      if (plateEl) plateEl.textContent = currentDriver.vehicle.license_plate || 'LAG-492-AA';
+      const battEl = document.getElementById('driverBattery');
+      if (battEl) battEl.textContent = `${currentDriver.vehicle.battery_level || 94}% 🔋`;
     }
   }
   refreshDriverData();
@@ -175,10 +194,12 @@ async function handleDriverRegister(e) {
 }
 
 function logoutDriver() {
+  closeDriverProfileModal();
   if (isCasting) {
     stopCastMode();
   }
   sessionStorage.removeItem('tripcast_driver');
+  sessionStorage.removeItem('tripcast_driver_user');
   currentDriver = null;
   showLogin();
 }

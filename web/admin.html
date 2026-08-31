@@ -75,6 +75,9 @@
           <button class="icon-circle-btn" onclick="refreshAdminData()" title="Sync System Data">
             <span>🔄</span>
           </button>
+          <button class="btn btn-subtle btn-sm" onclick="logoutAdmin()" title="Log Out Admin" style="color: #DC2626; border-color: rgba(220, 38, 38, 0.2); font-weight: 700;">
+            🚪 Log Out
+          </button>
           <div class="user-avatar-pill" onclick="openAdminSelfProfileModal()" title="View & Edit Admin Profile" style="cursor: pointer;">
             <div class="avatar-circle">OP</div>
           </div>
@@ -563,7 +566,10 @@
         </div>
       </section>
 
-      <!-- User Profile & Financial Ledger Modal -->
+    </div>
+  </div>
+
+  <!-- User Profile & Financial Ledger Modal -->
       <div class="modal-overlay" id="userProfileModal" style="display: none;">
         <div class="modal-card" style="max-width: 580px; border-radius: 22px; padding: 26px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px; margin-bottom: 18px;">
@@ -589,9 +595,9 @@
         </div>
       </div>
 
-      <!-- Admin Self User Profile & Security Modal -->
-      <div class="modal-overlay" id="adminSelfProfileModal">
-        <div class="modal-card" style="width: 100%; max-width: 540px;">
+  <!-- Admin Self User Profile & Security Modal -->
+  <div class="modal-overlay" id="adminSelfProfileModal" onclick="if (event.target === this) closeAdminSelfProfileModal()">
+    <div class="modal-card" style="width: 100%; max-width: 540px;">
           <div class="modal-header" style="align-items: center;">
             <div style="display: flex; align-items: center; gap: 12px;">
               <div class="avatar-circle" id="modalAdminProfileAvatar" style="width: 44px; height: 44px; font-size: 16px; background: #1E1E22; color: #fff;">
@@ -670,9 +676,6 @@
             </div>
           </form>
         </div>
-      </div>
-
-    </div>
   </div>
 
   <script src="admin.js"></script>

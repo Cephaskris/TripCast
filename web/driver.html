@@ -151,6 +151,9 @@
           <button class="icon-circle-btn" onclick="refreshDriverData()" title="Refresh Shift Telemetry">
             <span>🔄</span>
           </button>
+          <button class="btn btn-subtle btn-sm" onclick="logoutDriver()" title="End Shift & Log Out" style="color: #DC2626; border-color: rgba(220, 38, 38, 0.2); font-weight: 700;">
+            🚪 End Shift
+          </button>
           <div class="user-avatar-pill" onclick="openDriverProfileModal()" title="View & Edit Driver Profile" style="cursor: pointer;">
             <div class="avatar-circle" id="driverInitials">EO</div>
           </div>
@@ -369,7 +372,7 @@
   </div>
 
   <!-- Driver User Profile & Security Modal -->
-  <div class="modal-overlay" id="driverProfileModal">
+  <div class="modal-overlay" id="driverProfileModal" onclick="if (event.target === this) closeDriverProfileModal()">
     <div class="modal-card" style="width: 100%; max-width: 540px;">
       <div class="modal-header" style="align-items: center;">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -381,7 +384,7 @@
             <span class="status-pill active" style="font-size: 11px; margin-top: 4px; display: inline-block;">🚗 Verified Transit Driver</span>
           </div>
         </div>
-        <button class="modal-close-btn" onclick="closeDriverProfileModal()">✕</button>
+        <button type="button" class="modal-close-circle" onclick="closeDriverProfileModal()" title="Close Profile">&times;</button>
       </div>
 
       <form id="driverProfileForm" onsubmit="handleDriverSaveProfile(event)">

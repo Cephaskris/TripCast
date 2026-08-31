@@ -71,6 +71,9 @@
           <button class="icon-circle-btn" onclick="refreshSupportData()" title="Refresh Ticket Queue">
             <span>🔄</span>
           </button>
+          <button class="btn btn-subtle btn-sm" onclick="logoutSupport()" title="Log Out Helpdesk" style="color: #DC2626; border-color: rgba(220, 38, 38, 0.2); font-weight: 700;">
+            🚪 Log Out
+          </button>
           <div class="user-avatar-pill" onclick="openSupportProfileModal()" title="View & Edit Profile" style="cursor: pointer;">
             <div class="avatar-circle" id="agentInitials">AM</div>
           </div>
@@ -211,7 +214,7 @@
   </div>
 
   <!-- Support Agent Profile & Security Modal -->
-  <div class="modal-overlay" id="supportProfileModal">
+  <div class="modal-overlay" id="supportProfileModal" onclick="if (event.target === this) closeSupportProfileModal()">
     <div class="modal-card" style="width: 100%; max-width: 540px;">
       <div class="modal-header" style="align-items: center;">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -223,7 +226,7 @@
             <span class="status-pill active" style="font-size: 11px; margin-top: 4px; display: inline-block;">💬 Helpdesk Staff</span>
           </div>
         </div>
-        <button class="modal-close-btn" onclick="closeSupportProfileModal()">✕</button>
+        <button type="button" class="modal-close-circle" onclick="closeSupportProfileModal()" title="Close Profile">&times;</button>
       </div>
 
       <form id="supportProfileForm" onsubmit="handleSupportSaveProfile(event)">

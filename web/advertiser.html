@@ -110,6 +110,9 @@
           <button class="icon-circle-btn" onclick="refreshAdvertiserData()" title="Refresh Live Analytics">
             <span>🔄</span>
           </button>
+          <button class="btn btn-subtle btn-sm" onclick="logoutAdvertiser()" title="Log Out of Platform" style="color: #DC2626; border-color: rgba(220, 38, 38, 0.2); font-weight: 700;">
+            🚪 Log Out
+          </button>
           <div class="user-avatar-pill" onclick="openAdvUserProfileModal()" title="View & Edit User Profile" style="cursor: pointer;">
             <div class="avatar-circle" id="userAvatarInitials">AD</div>
           </div>
@@ -448,6 +451,8 @@
           </table>
         </div>
       </div>
+    </div>
+  </div>
 
   <!-- Create Campaign Modal -->
   <div class="modal-overlay" id="newCampaignModal">
@@ -617,7 +622,7 @@
   </div>
 
   <!-- Advertiser User Profile & Security Modal -->
-  <div class="modal-overlay" id="advProfileModal">
+  <div class="modal-overlay" id="advProfileModal" onclick="if (event.target === this) closeAdvUserProfileModal()">
     <div class="modal-card" style="width: 100%; max-width: 540px;">
       <div class="modal-header" style="align-items: center;">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -629,7 +634,7 @@
             <span class="status-pill paid" style="font-size: 11px; margin-top: 4px; display: inline-block;">📢 Verified Brand Account</span>
           </div>
         </div>
-        <button class="modal-close-btn" onclick="closeAdvUserProfileModal()">✕</button>
+        <button type="button" class="modal-close-circle" onclick="closeAdvUserProfileModal()" title="Close Profile">&times;</button>
       </div>
 
       <form id="advProfileForm" onsubmit="handleAdvSaveProfile(event)">

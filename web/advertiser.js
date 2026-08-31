@@ -1,4 +1,6 @@
-const API_BASE = window.location.origin;
+const API_BASE = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) 
+  ? window.location.origin 
+  : 'http://localhost:8080';
 
 let currentAdvertiser = null;
 let currentCampaigns = [];
@@ -10,9 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkAuth() {
-  const saved = sessionStorage.getItem('tripcast_advertiser');
+  const saved = sessionStorage.getItem('tripcast_advertiser') || sessionStorage.getItem('tripcast_adv_user');
   if (saved) {
-    currentAdvertiser = JSON.parse(saved);
+    try {
+      currentAdvertiser = JSON.parse(saved);
+    } catch (e) {
+      currentAdvertiser = null;
+    }
+  }
+
+  if (currentAdvertiser) {
     showDashboard();
   } else {
     showLogin();
@@ -20,8 +29,11 @@ function checkAuth() {
 }
 
 function showLogin() {
-  document.getElementById('loginSection').style.display = 'flex';
-  document.getElementById('dashboardSection').style.display = 'none';
+  closeAdvUserProfileModal();
+  const loginSec = document.getElementById('loginSection');
+  const dashSec = document.getElementById('dashboardSection');
+  if (loginSec) loginSec.style.display = 'flex';
+  if (dashSec) dashSec.style.display = 'none';
 }
 
 function switchAdvAuthTab(mode) {
@@ -44,12 +56,16 @@ function switchAdvAuthTab(mode) {
 }
 
 function showDashboard() {
-  document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('dashboardSection').style.display = 'block';
+  const loginSec = document.getElementById('loginSection');
+  const dashSec = document.getElementById('dashboardSection');
+  if (loginSec) loginSec.style.display = 'none';
+  if (dashSec) dashSec.style.display = 'block';
   if (currentAdvertiser) {
-    const brandDisplay = currentAdvertiser.company_name || currentAdvertiser.full_name;
-    document.getElementById('advGreeting').textContent = `Hello ${brandDisplay}`;
-    document.getElementById('userAvatarInitials').textContent = brandDisplay.substring(0, 2).toUpperCase();
+    const brandDisplay = currentAdvertiser.company_name || currentAdvertiser.full_name || 'Brand Advertiser';
+    const greetEl = document.getElementById('advGreeting');
+    if (greetEl) greetEl.textContent = `Hello ${brandDisplay}`;
+    const initialsEl = document.getElementById('userAvatarInitials');
+    if (initialsEl) initialsEl.textContent = (brandDisplay || 'AD').substring(0, 2).toUpperCase();
   }
   refreshAdvertiserData();
 }
@@ -130,7 +146,9 @@ async function handleAdvertiserRegister(e) {
 }
 
 function logoutAdvertiser() {
+  closeAdvUserProfileModal();
   sessionStorage.removeItem('tripcast_advertiser');
+  sessionStorage.removeItem('tripcast_adv_user');
   currentAdvertiser = null;
   showLogin();
 }

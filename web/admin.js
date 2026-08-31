@@ -1,4 +1,6 @@
-const API_BASE = window.location.origin;
+const API_BASE = (typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) 
+  ? window.location.origin 
+  : 'http://localhost:8080';
 
 let currentAdmin = null;
 let allCampaigns = [];
@@ -22,9 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkAuth() {
-  const saved = sessionStorage.getItem('tripcast_admin');
+  const saved = sessionStorage.getItem('tripcast_admin') || sessionStorage.getItem('tripcast_admin_user');
   if (saved) {
-    currentAdmin = JSON.parse(saved);
+    try {
+      currentAdmin = JSON.parse(saved);
+    } catch (e) {
+      currentAdmin = null;
+    }
+  }
+
+  if (currentAdmin) {
     showDashboard();
   } else {
     showLogin();
@@ -32,8 +41,12 @@ function checkAuth() {
 }
 
 function showLogin() {
-  document.getElementById('loginSection').style.display = 'flex';
-  document.getElementById('dashboardSection').style.display = 'none';
+  closeAdminSelfProfileModal();
+  closeUserProfileModal();
+  const loginSec = document.getElementById('loginSection');
+  const dashSec = document.getElementById('dashboardSection');
+  if (loginSec) loginSec.style.display = 'flex';
+  if (dashSec) dashSec.style.display = 'none';
 }
 
 function showDashboard() {
@@ -70,7 +83,10 @@ async function handleAdminLogin(e) {
 }
 
 function logoutAdmin() {
+  closeAdminSelfProfileModal();
+  closeUserProfileModal();
   sessionStorage.removeItem('tripcast_admin');
+  sessionStorage.removeItem('tripcast_admin_user');
   currentAdmin = null;
   showLogin();
 }
