@@ -248,6 +248,9 @@ function renderAdvCampaigns(campaigns) {
             <button class="btn btn-subtle btn-sm" onclick="jumpToProofOfPlay('${c.id}')" title="Inspect Verified Proof of Play Logs">
               Audit ↗
             </button>
+            <button class="btn btn-subtle btn-sm" onclick="deleteAdvCampaign('${c.id}', '${c.title}')" title="Delete Campaign from Convex Cloud" style="color: #dc2626; margin-left: 4px;">
+              🗑
+            </button>
           </td>
         </tr>
       `;
@@ -544,6 +547,22 @@ async function handleAdvSubmitTicket(e) {
     }
   } catch (err) {
     console.error('Error submitting advertiser ticket:', err);
+  }
+}
+
+async function deleteAdvCampaign(campaignId, title) {
+  if (!confirm(`Are you sure you want to delete the campaign "${title}" from Convex Cloud?`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert(`Campaign "${title}" deleted from Convex Cloud.`);
+      refreshAdvertiserData();
+    } else {
+      alert('Failed to delete campaign.');
+    }
+  } catch (err) {
+    console.error('Error deleting campaign:', err);
+    alert('Network error deleting campaign.');
   }
 }
 

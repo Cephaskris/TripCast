@@ -76,3 +76,61 @@ export const bulkDisburse = mutation({
     };
   },
 });
+
+export const create = mutation({
+  args: {
+    driverId: v.string(),
+    driverName: v.string(),
+    vehicleId: v.string(),
+    licensePlate: v.string(),
+    periodStart: v.string(),
+    periodEnd: v.string(),
+    monthCycle: v.string(),
+    hoursInTransit: v.number(),
+    totalPlaysVerified: v.number(),
+    rateApplied: v.number(),
+    payoutAmount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const id = await ctx.db.insert("payouts", {
+      driver_id: args.driverId,
+      driver_name: args.driverName,
+      vehicle_id: args.vehicleId,
+      license_plate: args.licensePlate,
+      period_start: args.periodStart,
+      period_end: args.periodEnd,
+      month_cycle: args.monthCycle,
+      hours_in_transit: args.hoursInTransit,
+      total_plays_verified: args.totalPlaysVerified,
+      rate_applied: args.rateApplied,
+      payout_amount: args.payoutAmount,
+      status: "PENDING",
+    });
+    return { success: true, id };
+  },
+});
+
+export const updateStatus = mutation({
+  args: {
+    id: v.id("payouts"),
+    status: v.union(v.literal("PENDING"), v.literal("PROCESSING"), v.literal("PAID")),
+    paymentReference: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const patch: Record<string, any> = { status: args.status };
+    if (args.paymentReference) {
+      patch.payment_reference = args.paymentReference;
+      patch.paid_at = new Date().toISOString();
+    }
+    await ctx.db.patch(args.id, patch);
+    return { success: true, id: args.id };
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id("payouts") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+    return { success: true, deletedId: args.id };
+  },
+});

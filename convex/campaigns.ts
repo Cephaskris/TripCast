@@ -52,16 +52,83 @@ export const create = mutation({
   },
 });
 
+export const getById = query({
+  args: { id: v.id("campaigns") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("campaigns"),
+    title: v.optional(v.string()),
+    videoUrl: v.optional(v.string()),
+    totalBudget: v.optional(v.number()),
+    costPerPlay: v.optional(v.number()),
+    targetImpressions: v.optional(v.number()),
+    currentImpressions: v.optional(v.number()),
+    targetCity: v.optional(v.string()),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
+    status: v.optional(v.union(
+      v.literal("PENDING"),
+      v.literal("APPROVED"),
+      v.literal("REJECTED"),
+      v.literal("ACTIVE"),
+      v.literal("COMPLETED")
+    )),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...updates } = args;
+    const patch: Record<string, any> = {};
+    if (updates.title !== undefined) patch.title = updates.title;
+    if (updates.videoUrl !== undefined) patch.video_url = updates.videoUrl;
+    if (updates.totalBudget !== undefined) patch.total_budget = updates.totalBudget;
+    if (updates.costPerPlay !== undefined) patch.cost_per_play = updates.costPerPlay;
+    if (updates.targetImpressions !== undefined) patch.target_impressions = updates.targetImpressions;
+    if (updates.currentImpressions !== undefined) patch.current_impressions = updates.currentImpressions;
+    if (updates.targetCity !== undefined) patch.target_city = updates.targetCity;
+    if (updates.startDate !== undefined) patch.start_date = updates.startDate;
+    if (updates.endDate !== undefined) patch.end_date = updates.endDate;
+    if (updates.status !== undefined) patch.status = updates.status;
+
+    await ctx.db.patch(id, patch);
+    return { success: true, id };
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id("campaigns") },
+  handler: async (ctx, args) => {
+    const logs = await ctx.db
+      .query("playbackLogs")
+      .withIndex("by_campaign", (q) => q.eq("campaign_id", args.id))
+      .collect();
+    for (const log of logs) {
+      await ctx.db.delete(log._id);
+    }
+    await ctx.db.delete(args.id);
+    return { success: true, deletedId: args.id };
+  },
+});
+
 export const moderate = mutation({
   args: {
     id: v.id("campaigns"),
-    status: v.union(v.literal("APPROVED"), v.literal("REJECTED"), v.literal("ACTIVE")),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("APPROVED"),
+      v.literal("REJECTED"),
+      v.literal("ACTIVE"),
+      v.literal("COMPLETED")
+    ),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
       status: args.status,
     });
-    return { success: true };
+    return { success: true, id: args.id, status: args.status };
   },
 });
 

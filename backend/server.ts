@@ -141,7 +141,7 @@ export interface SupportTicket {
 // Database Store (Cloud SQL Simulation)
 // ============================================================================
 
-const users: User[] = [
+let users: User[] = [
   { id: 'usr_admin', email: 'admin@tripcast.io', full_name: 'Platform Operations Admin', role: 'ADMIN', pin: 'admin123', phone: '+234 801 000 0001', created_at: '2026-01-10T08:00:00.000Z', status: 'ACTIVE' },
   { id: 'usr_client_1', email: 'advertiser@brand.com', full_name: 'Coca Cola Nigeria Ads', role: 'CLIENT', pin: 'pass123', phone: '+234 802 333 4455', created_at: '2026-02-15T09:30:00.000Z', status: 'ACTIVE', company_name: 'Coca Cola HBC Nigeria' },
   { id: 'usr_client_2', email: 'nike@advertiser.com', full_name: 'Nike Africa Campaign', role: 'CLIENT', pin: 'pass123', phone: '+234 803 777 8899', created_at: '2026-03-01T11:20:00.000Z', status: 'ACTIVE', company_name: 'Nike West Africa Brand Group' },
@@ -833,23 +833,116 @@ app.post('/api/campaigns', (req: Request, res: Response) => {
   res.status(201).json(newCampaign);
 });
 
-// Admin Campaign Moderation (Approve / Reject)
-app.patch('/api/campaigns/:id/status', (req: Request, res: Response) => {
+// Get Single Campaign by ID
+app.get('/api/campaigns/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { status } = req.body;
+  try {
+    const liveCamp = await convex.query(api.campaigns.getById, { id: id as any });
+    if (liveCamp) {
+      return res.status(200).json({
+        id: liveCamp._id,
+        client_id: liveCamp.client_id,
+        title: liveCamp.title,
+        video_url: liveCamp.video_url,
+        total_budget: liveCamp.total_budget,
+        cost_per_play: liveCamp.cost_per_play,
+        target_impressions: liveCamp.target_impressions,
+        current_impressions: liveCamp.current_impressions,
+        status: liveCamp.status,
+        target_city: liveCamp.target_city,
+        start_date: liveCamp.start_date,
+        end_date: liveCamp.end_date,
+        created_at: liveCamp.created_at
+      });
+    }
+  } catch (e: any) {}
 
   const campaign = campaigns.find(c => c.id === id);
-  if (!campaign) {
-    return res.status(404).json({ error: 'Campaign not found' });
+  if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+  res.status(200).json(campaign);
+});
+
+// Update Campaign & Video Details (CRUD - Update)
+app.put('/api/campaigns/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { title, video_url, total_budget, target_city, start_date, end_date, status } = req.body;
+
+  try {
+    await convex.mutation(api.campaigns.update, {
+      id: id as any,
+      title,
+      videoUrl: video_url,
+      totalBudget: total_budget !== undefined ? Number(total_budget) : undefined,
+      targetCity: target_city,
+      startDate: start_date,
+      endDate: end_date,
+      status
+    });
+    console.log(`[CONVEX CRUD] Updated campaign ${id} on Convex Cloud.`);
+  } catch (e: any) {
+    console.log('[CONVEX UPDATE] Notice:', e.message);
   }
+
+  const camp = campaigns.find(c => c.id === id);
+  if (camp) {
+    if (title) camp.title = title;
+    if (video_url) camp.video_url = video_url;
+    if (total_budget) {
+      camp.total_budget = Number(total_budget);
+      camp.target_impressions = Math.floor(Number(total_budget) / 25);
+    }
+    if (target_city) camp.target_city = target_city;
+    if (start_date) camp.start_date = start_date;
+    if (end_date) camp.end_date = end_date;
+    if (status) camp.status = status;
+    return res.status(200).json(camp);
+  }
+
+  res.status(200).json({ success: true, id, message: 'Campaign updated successfully.' });
+});
+
+// Admin Campaign Moderation (Approve / Reject / Activate)
+app.patch('/api/campaigns/:id/status', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body;
 
   if (!['PENDING', 'APPROVED', 'REJECTED', 'ACTIVE', 'COMPLETED'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
 
-  campaign.status = status;
-  console.log(`[MODERATION] Campaign ${id} status updated to: ${status}`);
-  res.status(200).json(campaign);
+  try {
+    await convex.mutation(api.campaigns.moderate, {
+      id: id as any,
+      status: status as any
+    });
+    console.log(`[CONVEX MODERATION] Campaign ${id} status updated to: ${status} in Convex Cloud.`);
+  } catch (e: any) {
+    console.log('[CONVEX MODERATION] Notice:', e.message);
+  }
+
+  const campaign = campaigns.find(c => c.id === id);
+  if (campaign) {
+    campaign.status = status;
+  }
+
+  res.status(200).json({ success: true, id, status });
+});
+
+// Delete Campaign (CRUD - Delete)
+app.delete('/api/campaigns/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    await convex.mutation(api.campaigns.remove, { id: id as any });
+    console.log(`[CONVEX CRUD] Deleted campaign ${id} from Convex Cloud.`);
+  } catch (e: any) {
+    console.log('[CONVEX DELETE] Notice:', e.message);
+  }
+
+  campaigns = campaigns.filter(c => c.id !== id);
+  playbackLogs = playbackLogs.filter(l => l.campaign_id !== id);
+
+  res.status(200).json({ success: true, deletedId: id, message: 'Campaign deleted successfully.' });
 });
 
 // Proof of Play Analytics
@@ -1582,6 +1675,75 @@ app.get('/api/admin/users/:id', (req: Request, res: Response) => {
   }
 
   res.status(200).json({ user: base });
+});
+
+// Update User Profile & Bank Details (CRUD - Update)
+app.patch('/api/admin/users/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { full_name, phone, company_name, status, bank_name, account_number, city, license_plate } = req.body;
+
+  try {
+    await convex.mutation(api.users.updateProfile, {
+      userId: String(id),
+      fullName: full_name,
+      phone,
+      companyName: company_name,
+      status,
+      bankName: bank_name,
+      accountNumber: account_number,
+      city,
+      licensePlate: license_plate
+    });
+    console.log(`[CONVEX CRUD] Updated user profile ${id} in Convex Cloud.`);
+  } catch (e: any) {
+    console.log('[CONVEX USER UPDATE] Notice:', e.message);
+  }
+
+  const user = users.find(u => u.id === id);
+  if (user) {
+    if (full_name) user.full_name = full_name;
+    if (phone) user.phone = phone;
+    if (company_name) user.company_name = company_name;
+    if (status) user.status = status;
+    if (bank_name) user.bank_name = bank_name;
+    if (account_number) user.account_number = account_number;
+    if (city) user.city = city;
+    if (license_plate) user.license_plate = license_plate;
+    return res.status(200).json({ success: true, user });
+  }
+
+  res.status(200).json({ success: true, id, message: 'User updated successfully.' });
+});
+
+// Delete User (CRUD - Delete)
+app.delete('/api/admin/users/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    await convex.mutation(api.users.remove, { userId: String(id) });
+    console.log(`[CONVEX CRUD] Deleted user ${id} from Convex Cloud.`);
+  } catch (e: any) {
+    console.log('[CONVEX USER DELETE] Notice:', e.message);
+  }
+
+  users = users.filter(u => u.id !== id);
+  vehicles = vehicles.filter(v => v.driver_id !== id);
+
+  res.status(200).json({ success: true, deletedId: id, message: 'User deleted successfully.' });
+});
+
+// Delete Ticket (CRUD - Delete)
+app.delete('/api/tickets/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    await convex.mutation(api.tickets.remove, { ticketId: id as any });
+    console.log(`[CONVEX CRUD] Deleted ticket ${id} from Convex Cloud.`);
+  } catch (e: any) {
+    console.log('[CONVEX TICKET DELETE] Notice:', e.message);
+  }
+
+  tickets = tickets.filter(t => t.id !== id);
+  res.status(200).json({ success: true, deletedId: id });
 });
 
 // Start Server

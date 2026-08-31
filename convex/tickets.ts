@@ -60,3 +60,18 @@ export const updateStatus = mutation({
     return { success: true };
   },
 });
+
+export const getById = query({
+  args: { ticketId: v.id("tickets") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.ticketId);
+  },
+});
+
+export const remove = mutation({
+  args: { ticketId: v.id("tickets") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.ticketId);
+    return { success: true, deletedId: args.ticketId };
+  },
+});

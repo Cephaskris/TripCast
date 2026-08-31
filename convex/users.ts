@@ -162,3 +162,87 @@ export const register = mutation({
   },
 });
 
+export const getById = query({
+  args: { id: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
+export const updateProfile = mutation({
+  args: {
+    id: v.optional(v.id("users")),
+    userId: v.optional(v.string()),
+    fullName: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    companyName: v.optional(v.string()),
+    status: v.optional(v.string()),
+    bankName: v.optional(v.string()),
+    accountNumber: v.optional(v.string()),
+    city: v.optional(v.string()),
+    licensePlate: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let targetId = args.id;
+    if (!targetId && args.userId) {
+      const u = await ctx.db
+        .query("users")
+        .filter((q) => q.eq(q.field("userId"), args.userId))
+        .first();
+      if (u) targetId = u._id;
+    }
+    if (!targetId) {
+      throw new Error("User record not found in Convex");
+    }
+
+    const patch: Record<string, any> = {};
+    if (args.fullName !== undefined) patch.full_name = args.fullName;
+    if (args.phone !== undefined) patch.phone = args.phone;
+    if (args.companyName !== undefined) patch.company_name = args.companyName;
+    if (args.status !== undefined) patch.status = args.status;
+    if (args.bankName !== undefined) patch.bank_name = args.bankName;
+    if (args.accountNumber !== undefined) patch.account_number = args.accountNumber;
+    if (args.city !== undefined) patch.city = args.city;
+    if (args.licensePlate !== undefined) patch.license_plate = args.licensePlate;
+
+    await ctx.db.patch(targetId, patch);
+    return { success: true, id: targetId };
+  },
+});
+
+export const remove = mutation({
+  args: {
+    id: v.optional(v.id("users")),
+    userId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let target = null;
+    if (args.id) {
+      target = await ctx.db.get(args.id);
+    } else if (args.userId) {
+      target = await ctx.db
+        .query("users")
+        .filter((q) => q.eq(q.field("userId"), args.userId))
+        .first();
+    }
+
+    if (!target) {
+      throw new Error("User not found to delete");
+    }
+
+    // Clean up related vehicles if driver
+    if (target.role === "DRIVER") {
+      const vehicles = await ctx.db
+        .query("vehicles")
+        .withIndex("by_driver", (q) => q.eq("driver_id", target.userId))
+        .collect();
+      for (const v of vehicles) {
+        await ctx.db.delete(v._id);
+      }
+    }
+
+    await ctx.db.delete(target._id);
+    return { success: true, deletedUserId: target.userId };
+  },
+});
+

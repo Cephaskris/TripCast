@@ -223,6 +223,9 @@ function renderAdminModeration(campaigns) {
         ` : `
           <button class="btn btn-subtle btn-sm" onclick="updateCampaignStatus('${c.id}', '${c.status === 'ACTIVE' ? 'PENDING' : 'ACTIVE'}')">Toggle</button>
         `}
+        <button class="btn btn-subtle btn-sm" title="Delete Campaign from Convex Cloud" onclick="deleteAdminCampaign('${c.id}', '${c.title}')" style="color: #dc2626; margin-left: 4px;">
+          🗑
+        </button>
       </td>
     </tr>
   `).join('');
@@ -807,6 +810,9 @@ function renderUsersTable(users) {
           <button class="btn btn-dark btn-sm" onclick="openUserProfileModal('${u.id}')">
             Profile ↗
           </button>
+          <button class="btn btn-subtle btn-sm" title="Delete User from Convex Cloud" onclick="deleteAdminUser('${u.id}', '${u.full_name}')" style="color: #dc2626; margin-left: 4px;">
+            🗑
+          </button>
         </td>
       </tr>
     `;
@@ -962,6 +968,38 @@ async function openUserProfileModal(userId) {
 
 function closeUserProfileModal() {
   document.getElementById('userProfileModal').style.display = 'none';
+}
+
+async function deleteAdminCampaign(campaignId, title) {
+  if (!confirm(`Are you sure you want to permanently delete the campaign "${title}" from Convex Cloud?`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/campaigns/${campaignId}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert(`Campaign "${title}" deleted from Convex Cloud.`);
+      refreshAdminData();
+    } else {
+      alert('Failed to delete campaign from Convex Cloud.');
+    }
+  } catch (err) {
+    console.error('Error deleting campaign:', err);
+    alert('Network error deleting campaign.');
+  }
+}
+
+async function deleteAdminUser(userId, name) {
+  if (!confirm(`Are you sure you want to permanently delete user "${name}" (ID: ${userId}) from Convex Cloud?`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert(`User "${name}" deleted from Convex Cloud.`);
+      refreshAdminUserDirectory();
+    } else {
+      alert('Failed to delete user from Convex Cloud.');
+    }
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    alert('Network error deleting user.');
+  }
 }
 
 
